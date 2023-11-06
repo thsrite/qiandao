@@ -36,6 +36,16 @@ define (require) ->
     url_parse: node_url.parse
     url_unparse: node_url.format
 
+    path_unparse_with_variables: (path) ->
+      _path = decodeURIComponent(path)
+      replace_list = {}
+      re = /{{\s*([\w]+)[^}]*?\s*}}/g
+      while m = re.exec(_path)
+        replace_list[fix_encodeURIComponent(m[0])] = m[0]
+      for key, value of replace_list
+        path = path.replace(new RegExp(RegExp.escape(key), 'g'), value)
+      return path
+
     querystring_parse: node_querystring.parse
     querystring_unparse: node_querystring.stringify
     querystring_unparse_with_variables: (obj) ->
@@ -94,22 +104,21 @@ define (require) ->
       timestamp = 0
       timeout = 0
 
-      later = () ->
-        last = (new Date().getTime()) - timestamp
-
-        if 0 < last < wait
-          timeout = setTimeout(later, wait - last)
-        else
-          timeout = null
-          if not immediate
-            result = func.apply(context, args)
-            if not timeout
-              context = args = null
-
       return () ->
         context = this
         args = arguments
         timestamp = (new Date().getTime())
+        later = () ->
+          last = (new Date().getTime()) - timestamp
+
+          if 0 < last < wait
+            timeout = setTimeout(later, wait - last)
+          else
+            timeout = null
+            if not immediate
+              result = func.apply(context, args)
+              if not timeout
+                context = args = null
         callNow = immediate and not timeout
         if not timeout
           timeout = setTimeout(later, wait)
@@ -190,7 +199,7 @@ define (require) ->
           version: '1.2'
         }
       }
-    
+
     curl2har: (curl) ->
       if curl?.length? == 0
         console.error("Curl 命令为空")

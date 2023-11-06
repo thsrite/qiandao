@@ -9,11 +9,13 @@ import base64
 import json
 import random
 import re
+import time
 import traceback
 import urllib
 import urllib.parse as urlparse
 from datetime import datetime
 from io import BytesIO
+from typing import Iterable
 
 from jinja2.sandbox import SandboxedEnvironment as Environment
 from tornado import gen, httpclient, simple_httpclient
@@ -31,7 +33,8 @@ if config.use_pycurl:
     try:
         import pycurl
     except ImportError as e:
-        logger_Fetcher.warning('Import PyCurl module falied: \"%s\". \nTips: This warning message is only for prompting, it will not affect running of QD framework.',e)
+        if config.display_import_warning:
+            logger_Fetcher.warning('Import PyCurl module falied: \"%s\". \nTips: This warning message is only for prompting, it will not affect running of QD framework.',e)
         pycurl = None
 else:
     pycurl = None
@@ -93,7 +96,7 @@ class Fetcher(object):
         url = request['url']
         if str(url).startswith('api://'):
             url = str(url).replace('api:/', local_host, 1)
-        
+
         headers = dict((e['name'], e['value']) for e in request['headers'])
         cookies = dict((e['name'], e['value']) for e in request['cookies'])
         data = request.get('data')
@@ -291,7 +294,7 @@ class Fetcher(object):
                         content[0] = utils.decode(response.body)
                 if ('content-type' in response.headers):
                     if 'image' in response.headers.get('content-type'):
-                        return base64.b64encode(response.body).decode('utf8') 
+                        return base64.b64encode(response.body).decode('utf8')
                 return content[0]
             elif _from == 'status':
                 return '%s' % response.code
@@ -300,7 +303,9 @@ class Fetcher(object):
                 return response.headers.get(_from, '')
             elif _from == 'header':
                 try:
-                    return str(response.headers._dict).replace('\'', '')
+                    if hasattr(response, 'headers') and isinstance(response.headers, HTTPHeaders):
+                        return '\n'.join(['{key}: {value}'.format(key=key,value=value) for key,value in response.headers.get_all()])
+                    return '\n'.join(['{key}: {value}'.format(key=key,value=value) for key,value in response.headers._dict.items()])
                 except Exception as e:
                     if config.traceback_print:
                         traceback.print_exc()
@@ -313,7 +318,7 @@ class Fetcher(object):
                     logger_Fetcher.error('Run rule failed: %s', str(e))
             else:
                 return ''
-            
+
         session=env['session']
         if isinstance(session, cookie_utils.CookieSession):
             _cookies = session
@@ -329,7 +334,7 @@ class Fetcher(object):
             except Exception as e:
                 log_error = 'The error occurred when rendering template {}: {} \\r\\n {}'.format(key,obj[key],repr(e))
                 raise httpclient.HTTPError(500,log_error)
-        
+
 
         for r in rule.get('success_asserts') or '':
             _render(r, 're')
@@ -341,7 +346,7 @@ class Fetcher(object):
         else:
             if rule.get('success_asserts'):
                 success = False
-                
+
 
         for r in rule.get('failed_asserts') or '':
             _render(r, 're')
@@ -510,8 +515,8 @@ class Fetcher(object):
         """
         obj = {
           request: {
-            method: 
-            url: 
+            method:
+            url:
             headers: [{name: , value: }, ]
             cookies: [{name: , value: }, ]
             data:
@@ -543,10 +548,11 @@ class Fetcher(object):
             'msg': msg,
             }
 
-    FOR_START = re.compile('{%\s*for\s+(\w+)\s+in\s+(\w+)\s*%}')
+    FOR_START = re.compile('{%\s*for\s+(\w+)\s+in\s+(\w+|list\([\s\S]*\)|range\([\s\S]*\))\s*%}')
     IF_START = re.compile('{%\s*if\s+(.+)\s*%}')
+    WHILE_START = re.compile('{%\s*while\s+(.+)\s*%}')
     ELSE_START = re.compile('{%\s*else\s*%}')
-    PARSE_END = re.compile('{%\s*end(for|if)\s*%}')
+    PARSE_END = re.compile('{%\s*end(for|if|while)\s*%}')
 
     def parse(self, tpl):
         stmt_stack = []
@@ -554,7 +560,7 @@ class Fetcher(object):
         def __append(entry):
             if stmt_stack[-1]['type'] == 'if':
                 stmt_stack[-1][stmt_stack[-1]['parse']].append(entry)
-            elif stmt_stack[-1]['type'] == 'for':
+            elif stmt_stack[-1]['type'] == 'for' or stmt_stack[-1]['type'] == 'while':
                 stmt_stack[-1]['body'].append(entry)
 
         for i, entry in enumerate(tpl):
@@ -566,7 +572,16 @@ class Fetcher(object):
                     'type': 'for',
                     'target': m.group(1),
                     'from': m.group(2),
-                    'body': []
+                    'body': [],
+                    'idx': entry['idx'],
+                })
+            elif self.WHILE_START.match(entry['request']['url']):
+                m = self.WHILE_START.match(entry['request']['url'])
+                stmt_stack.append({
+                    'type': 'while',
+                    'condition': m.group(1),
+                    'body': [],
+                    'idx': entry['idx'],
                 })
             elif self.IF_START.match(entry['request']['url']):
                 m = self.IF_START.match(entry['request']['url'])
@@ -575,13 +590,17 @@ class Fetcher(object):
                     'condition': m.group(1),
                     'parse': 'true',
                     'true': [],
-                    'false': []
+                    'false': [],
+                    'idx': entry['idx'],
                 })
             elif self.ELSE_START.match(entry['request']['url']):
                 stmt_stack[-1]['parse'] = 'false'
             elif self.PARSE_END.match(entry['request']['url']):
+                m = self.PARSE_END.match(entry['request']['url'])
                 entry_type = stmt_stack and stmt_stack[-1]['type']
-                if entry_type == 'for' or entry_type == 'if':
+                if entry_type == 'for' or entry_type == 'if' or entry_type == 'while':
+                    if m.group(1) != entry_type:
+                        raise Exception('Failed at %d/%d end tag \\r\\nError: End tag should be "end%s", but "end%s"' % (i+1, len(tpl), stmt_stack[-1]['type'], m.group(1)))
                     entry = stmt_stack.pop()
                     if stmt_stack:
                         __append(entry)
@@ -601,7 +620,7 @@ class Fetcher(object):
         while stmt_stack:
             yield stmt_stack.pop()
 
-    async def do_fetch(self, tpl, env, proxies=config.proxies, request_limit=1000, tpl_length=0):
+    async def do_fetch(self, tpl, env, proxies=config.proxies, request_limit=config.task_request_limit, tpl_length=0):
         """
         do a fetch of hole tpl
         """
@@ -619,9 +638,77 @@ class Fetcher(object):
             if request_limit <= 0:
                 raise Exception('request limit')
             elif block['type'] == 'for':
-                for each in env['variables'].get(block['from'], []):
-                    env['variables'][block['target']] = each
-                    env = await self.do_fetch(block['body'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+                support_enum = False
+                _from_var = block['from']
+                _from = env['variables'].get(_from_var, [])
+                try:
+                    if isinstance(_from_var, str) and _from_var.startswith('list(') or _from_var.startswith('range('):
+                        _from = safe_eval(_from_var, env['variables'])
+                    if not isinstance(_from, Iterable):
+                        raise Exception('for循环只支持可迭代类型及变量')
+                    support_enum = True
+                except Exception as e:
+                    if config.debug:
+                        logger_Fetcher.exception(e)
+                if support_enum:
+                    env['variables']['loop_length'] = str(len(_from))
+                    env['variables']['loop_depth'] = str(int(env['variables'].get('loop_depth', '0')) + 1)
+                    env['variables']['loop_depth0'] = str(int(env['variables'].get('loop_depth0', '-1')) + 1)
+                    for idx, each in enumerate(_from):
+                        env['variables'][block['target']] = each
+                        if idx == 0:
+                            env['variables']['loop_first'] = 'True'
+                            env['variables']['loop_last'] = 'False'
+                        elif idx == len(_from) - 1:
+                            env['variables']['loop_first'] = 'False'
+                            env['variables']['loop_last'] = 'True'
+                        else:
+                            env['variables']['loop_first'] = 'False'
+                            env['variables']['loop_last'] = 'False'
+                        env['variables']['loop_index'] = str(idx + 1)
+                        env['variables']['loop_index0'] = str(idx)
+                        env['variables']['loop_revindex'] = str(len(_from) - idx)
+                        env['variables']['loop_revindex0'] = str(len(_from) - idx - 1)
+                        env, request_limit = await self.do_fetch(block['body'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+                    env['variables']['loop_depth'] = str(int(env['variables'].get('loop_depth', '0')) - 1)
+                    env['variables']['loop_depth0'] = str(int(env['variables'].get('loop_depth0', '-1')) - 1)
+                else:
+                    for each in _from:
+                        env['variables'][block['target']] = each
+                        env, request_limit = await self.do_fetch(block['body'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+            elif block['type'] == 'while':
+                start_time = time.perf_counter()
+                env['variables']['loop_depth'] = str(int(env['variables'].get('loop_depth', '0')) + 1)
+                env['variables']['loop_depth0'] = str(int(env['variables'].get('loop_depth0', '-1')) + 1)
+                while_idx = 0
+                while time.perf_counter() - start_time <= config.task_while_loop_timeout:
+                    env['variables']['loop_index'] = str(while_idx + 1)
+                    env['variables']['loop_index0'] = str(while_idx)
+                    try:
+                        condition = safe_eval(block['condition'],env['variables'])
+                    except NameError:
+                        condition = False
+                    except ValueError as e:
+                        if len(str(e)) > 20 and str(e)[:20] == "<class 'NameError'>:":
+                            condition = False
+                        else:
+                            raise Exception('Failed at %d/%d while condition, \\r\\nError: %s, \\r\\nBlock condition: %s' %
+                                (block['idx'], tpl_length, str(e).replace("<class 'ValueError'>","ValueError"), block['condition']))
+                    except Exception as e:
+                        raise Exception('Failed at %d/%d while condition, \\r\\nError: %s, \\r\\nBlock condition: %s' %
+                                (block['idx'], tpl_length, e, block['condition']))
+                    if condition:
+                        env, request_limit = await self.do_fetch(block['body'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+                    else:
+                        if config.debug:
+                            logger_Fetcher.debug('while loop break, time: %ss', time.perf_counter() - start_time)
+                        break
+                    while_idx += 1
+                else:
+                    raise Exception('Failed at %d/%d while end, \\r\\nError: while loop timeout, time: %ss \\r\\nBlock condition: %s' %
+                                    (block['idx'], tpl_length, time.perf_counter() - start_time , block['condition']))
+                env['variables']['loop_depth'] = str(int(env['variables'].get('loop_depth', '0')) - 1)
+                env['variables']['loop_depth0'] = str(int(env['variables'].get('loop_depth0', '-1')) - 1)
             elif block['type'] == 'if':
                 try:
                     condition = safe_eval(block['condition'],env['variables'])
@@ -631,11 +718,15 @@ class Fetcher(object):
                     if len(str(e)) > 20 and str(e)[:20] == "<class 'NameError'>:":
                         condition = False
                     else:
-                        raise e
+                        raise Exception('Failed at %d/%d if condition, \\r\\nError: %s, \\r\\nBlock condition: %s' %
+                            (block['idx'], tpl_length, str(e).replace("<class 'ValueError'>","ValueError"), block['condition']))
+                except Exception as e:
+                    raise Exception('Failed at %d/%d if condition, \\r\\nError: %s, \\r\\nBlock condition: %s' %
+                                    (block['idx'], tpl_length, e, block['condition']))
                 if condition:
-                    await self.do_fetch(block['true'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+                    _, request_limit = await self.do_fetch(block['true'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
                 else:
-                    await self.do_fetch(block['false'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
+                    _, request_limit = await self.do_fetch(block['false'], env, proxies=[proxy], request_limit=request_limit, tpl_length=tpl_length)
             elif block['type'] == 'request':
                 entry = block['entry']
                 try:
@@ -654,4 +745,4 @@ class Fetcher(object):
                 if not result['success']:
                     raise Exception('Failed at %d/%d request, \\r\\n%s, \\r\\nRequest URL: %s' % (
                         entry['idx'], tpl_length, result['msg'], entry['request']['url']))
-        return env
+        return env, request_limit

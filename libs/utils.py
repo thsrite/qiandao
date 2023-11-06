@@ -7,19 +7,32 @@
 
 import base64
 import datetime
+import functools
 import hashlib
+import html
 import ipaddress
+import random
 import re
+import smtplib
 import socket
 import struct
 import time
-import urllib
 import uuid
+from binascii import (a2b_base64, a2b_hex, a2b_qp, a2b_uu, b2a_base64, b2a_hex,
+                      b2a_qp, b2a_uu, crc32, crc_hqx)
+from email.mime.text import MIMEText
+from hashlib import sha1
+from typing import Any, Iterable, Mapping, Tuple, Union
+from urllib import parse as urllib_parse
 
-import jinja2
+import charset_normalizer
+import umsgpack
 from Crypto.Cipher import AES
 from faker import Faker
 from jinja2.filters import do_float, do_int
+from jinja2.runtime import Undefined
+from jinja2.utils import generate_lorem_ipsum, url_quote
+from requests.utils import get_encoding_from_headers
 from tornado import gen, httpclient
 
 import config
@@ -28,7 +41,14 @@ from libs.mcrypto import aes_decrypt, aes_encrypt, passlib_or_crypt
 
 from .log import Log
 
+try:
+    from hashlib import md5 as _md5
+except ImportError:
+    # Assume we're running in FIPS mode here
+    _md5 = None
+
 logger_Util = Log('QD.Http.Util').getlogger()
+
 def ip2int(addr):
     try:
         return struct.unpack("!I", socket.inet_aton(addr))[0]
@@ -40,7 +60,7 @@ def ip2varbinary(addr:str, version:int):
         return socket.inet_aton(addr)
     if version == 6:
         return socket.inet_pton(socket.AF_INET6,addr)
- 
+
 def is_lan(ip):
     try:
         return ipaddress.ip_address(ip.strip()).is_private
@@ -180,7 +200,7 @@ def urlMatchWithLimit(url):
         r"$",
         re.UNICODE | re.IGNORECASE
     )
-    
+
     match = reobj.search(url)
     if match:
         return match.group()
@@ -193,23 +213,11 @@ def domainMatch(domain):
         r'+[A-Za-z0-9][A-Za-z0-9-_]{0,61}'  # First 61 characters of the gTLD
         r'[A-Za-z]$'  # Last character of the gTLD
     )
-    
+
     match = reobj.search(domain)
     if match:
         return match.group()
     return ''
-
-def getLocalScheme(scheme):
-    if scheme in ['http','https']:
-        if config.https:
-            return 'https'
-        else:
-            return 'http'
-    return scheme
-
-import functools
-
-import umsgpack
 
 
 def func_cache(f):
@@ -241,7 +249,7 @@ def method_cache(fn):
 
     return wrapper
 
-#full_format=True，的时候是具体时间，full_format=False就是几秒钟几分钟几小时时间格式----此处为模糊时间格式模式
+#full_format=True 的时候是具体时间，full_format=False就是几秒钟几分钟几小时时间格式----此处为模糊时间格式模式
 def format_date(date, gmt_offset=time.timezone/60, relative=True, shorter=False, full_format=True):
     """Formats the given date (which should be GMT).
 
@@ -313,32 +321,70 @@ def format_date(date, gmt_offset=time.timezone/60, relative=True, shorter=False,
         "time": str_time
     }
 
-def utf8(string):
-    if isinstance(string, str):
-        return string.encode('utf8')
-    return string
+def utf8(value):
+    if isinstance(value, str):
+        return value.encode('utf8')
+    return value
 
-def conver2unicode(string):
-    if not isinstance(string,str):
+def conver2unicode(value, html_unescape=False):
+    if not isinstance(value, str):
         try:
-            string = string.decode()
+            value = value.decode()
         except :
-            string =  str(string)
-    tmp = bytes(string,'unicode_escape').decode('utf-8').replace(r'\u',r'\\u').replace(r'\\\u',r'\\u')
+            value = str(value)
+    tmp = bytes(value,'unicode_escape').decode('utf-8').replace(r'\u',r'\\u').replace(r'\\\u',r'\\u')
     tmp = bytes(tmp,'utf-8').decode('unicode_escape')
-    return tmp.encode('utf-8').replace(b'\xc2\xa0',b'\xa0').decode('unicode_escape')
+    tmp = tmp.encode('utf-8').replace(b'\xc2\xa0',b'\xa0').decode('unicode_escape')
+    if html_unescape:
+        tmp = html.unescape(tmp)
+    return tmp
 
-def to_bool(a):
+def urlencode_with_encoding(
+    value: Union[str, Mapping[str, Any], Iterable[Tuple[str, Any]]],
+    encoding: str = "utf-8",
+    for_qs: bool = False,
+) -> str:
+    """Quote data for use in a URL path or query using UTF-8.
+
+    Basic wrapper around :func:`urllib.parse.quote` when given a
+    string, or :func:`urllib.parse.urlencode` for a dict or iterable.
+
+    :param value: Data to quote. A string will be quoted directly. A
+        dict or iterable of ``(key, value)`` pairs will be joined as a
+        query string.
+    :param encoding: The encoding to use for quoted strings.
+    :param for_qs: If ``True``, quote ``/`` as ``%2F``. If ``False``,
+        leave slashes unquoted. Defaults to ``False``.
+
+    When given a string, "/" is not quoted. HTTP servers treat "/" and
+    "%2F" equivalently in paths. If you need quoted slashes, use the
+    ``|replace("/", "%2F")`` filter.
+
+    .. versionadded:: 2.7
+    """
+    if isinstance(value, str) or not isinstance(value, Iterable):
+        return url_quote(value, charset=encoding, for_qs=for_qs)
+
+    if isinstance(value, dict):
+        items: Iterable[Tuple[str, Any]] = value.items()
+    else:
+        items = value  # type: ignore
+
+    return "&".join(
+        f"{url_quote(k, for_qs=True)}={url_quote(v, for_qs=True)}" for k, v in items
+    )
+
+def to_bool(value):
     ''' return a bool for the arg '''
-    if a is None or isinstance(a, bool):
-        return a
-    if isinstance(a, str):
-        a = a.lower()
-    if a in ('yes', 'on', '1', 'true', 1):
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        value = value.lower()
+    if value in ('yes', 'on', '1', 'true', 1):
         return True
     return False
 
-async def send_mail(to, subject, text=None, html=None, shark=False, _from=u"QD提醒 <noreply@{}>".format(config.mail_domain)):
+async def send_mail(to, subject, text=None, html=None, shark=False, _from=u"QD提醒 <noreply@{}>".format(config.domain)):
     if not config.mailgun_key:
         subtype = 'html' if html else 'plain'
         await _send_mail(to, subject, html or text or '', subtype)
@@ -365,18 +411,13 @@ async def send_mail(to, subject, text=None, html=None, shark=False, _from=u"QD�
 
     req = httpclient.HTTPRequest(
         method="POST",
-        url="https://api.mailgun.net/v2/%s/messages" % config.mail_domain,
+        url="https://api.mailgun.net/v3/%s/messages" % config.mailgun_domain,
         auth_username="api",
         auth_password=config.mailgun_key,
-        body=urllib.parse.urlencode(body)
+        body=urllib_parse.urlencode(body)
     )
     res = await client.fetch(req)
     return res
-
-
-import smtplib
-from email.mime.text import MIMEText
-
 
 async def _send_mail(to, subject, text=None, subtype='html'):
     if not config.mail_smtp:
@@ -388,8 +429,19 @@ async def _send_mail(to, subject, text=None, subtype='html'):
     msg['To'] = to
     try:
         logger_Util.info('send mail to {}'.format(to))
-        s = config.mail_ssl and smtplib.SMTP_SSL(config.mail_smtp) or smtplib.SMTP(config.mail_smtp)
-        s.connect(config.mail_smtp)
+        if config.mail_port:
+            if config.mail_ssl or config.mail_port in [465,587]:
+                s = smtplib.SMTP_SSL(config.mail_smtp, config.mail_port)
+            else:
+                s = smtplib.SMTP(config.mail_smtp, config.mail_port)
+            s.connect(config.mail_smtp, config.mail_port)
+        else:
+            if config.mail_ssl:
+                s = smtplib.SMTP_SSL(config.mail_smtp)
+            else:
+                s = smtplib.SMTP(config.mail_smtp)
+            s.connect(config.mail_smtp)
+        # s = config.mail_ssl and smtplib.SMTP_SSL(config.mail_smtp) or smtplib.SMTP(config.mail_smtp)
         if config.mail_user:
             s.login(config.mail_user, config.mail_password)
         s.sendmail(config.mail_from, to, msg.as_string())
@@ -397,10 +449,6 @@ async def _send_mail(to, subject, text=None, subtype='html'):
     except Exception as e:
         logger_Util.error('send mail error {}'.format(str(e)))
     return
-
-
-import charset_normalizer
-from requests.utils import get_encoding_from_headers
 
 
 def get_encodings_from_content(content):
@@ -424,7 +472,7 @@ def find_encoding(content, headers=None):
     # content is unicode
     if isinstance(content, str):
         return 'utf-8'
-    
+
     encoding = None
 
     # Try charset from content-type
@@ -436,7 +484,7 @@ def find_encoding(content, headers=None):
     # Fallback to auto-detected encoding.
     if not encoding and charset_normalizer is not None:
         encoding = charset_normalizer.detect(content)['encoding']
-    
+
     # Try charset from content
     if not encoding:
         try:
@@ -456,7 +504,7 @@ def decode(content, headers=None):
     encoding = find_encoding(content, headers)
     if encoding == 'unicode':
         return content
-    
+
     try:
         return content.decode(encoding, 'replace')
     except Exception as e:
@@ -464,37 +512,29 @@ def decode(content, headers=None):
         return None
 
 
-def quote_chinese(url, encodeing="utf-8"):
-    if isinstance(url, str):
-        return quote_chinese(url.encode("utf-8"))
-    if isinstance(url,bytes):
-        url = url.decode()
-    res = [b if ord(b) < 128 else urllib.parse.quote(b) for b in url]
-    return "".join(res)
+def quote_chinese(value, sep="", encoding="utf-8", decoding="utf-8"):
+    if isinstance(value, str):
+        return quote_chinese(value.encode(encoding))
+    if isinstance(value, bytes):
+        value = value.decode(decoding)
+    res = [b if ord(b) < 128 else urllib_parse.quote(b) for b in value]
+    if sep is not None:
+        return sep.join(res)
+    return res
 
 
-from hashlib import sha1
-
-try:
-    from hashlib import md5 as _md5
-except ImportError:
-    # Assume we're running in FIPS mode here
-    _md5 = None
-
-def secure_hash_s(data, hash_func=sha1):
+def secure_hash_s(value, hash_func=sha1):
     ''' Return a secure hash hex digest of data. '''
 
     digest = hash_func()
-    data = to_bytes(data, errors='surrogate_or_strict')
-    digest.update(data)
+    value = to_bytes(value, errors='surrogate_or_strict')
+    digest.update(value)
     return digest.hexdigest()
 
-def md5string(data):
+def md5string(value):
     if not _md5:
         raise ValueError('MD5 not available.  Possibly running in FIPS mode')
-    return secure_hash_s(data, _md5)
-
-import random
+    return secure_hash_s(value, _md5)
 
 
 def get_random(min_num, max_num, unit):
@@ -520,8 +560,6 @@ def randomize_list(mylist, seed=None):
     except Exception:
         raise
     return mylist
-
-import datetime
 
 
 def get_date_time(date=True, time=True, time_difference=0):
@@ -610,7 +648,7 @@ def regex_search(value, pattern, *args, **kwargs):
 
 def ternary(value, true_val, false_val, none_val=None):
     '''  value ? true_val : false_val '''
-    if (value is None or isinstance(value, jinja2.Undefined)) and none_val is not None:
+    if (value is None or isinstance(value, Undefined)) and none_val is not None:
         return none_val
     elif bool(value):
         return true_val
@@ -634,9 +672,6 @@ def regex_escape(value, re_type='python'):
         raise Exception('Regex type (%s) not yet implemented' % re_type)
     else:
         raise Exception('Invalid regex type (%s)' % re_type)
-
-import time
-
 
 def timestamp(type='int'):
     if type=='float':
@@ -696,22 +731,22 @@ def divide(*args):
     else:
         return result
 
-def is_num(s:str=''):
-    s = str(s)
-    if s.count('.') ==1:
-        tmp = s.split('.')
+def is_num(value:str=''):
+    value = str(value)
+    if value.count('.') ==1:
+        tmp = value.split('.')
         return tmp[0].lstrip('-').isdigit() and tmp[1].isdigit()
     else:
-        return s.lstrip('-').isdigit()
+        return value.lstrip('-').isdigit()
 
-def get_hash(data, hashtype='sha1'):
+def get_hash(value, hashtype='sha1'):
     try:
         h = hashlib.new(hashtype)
     except Exception as e:
         # hash is not supported?
         raise Exception(e)
 
-    h.update(to_bytes(data, errors='surrogate_or_strict'))
+    h.update(to_bytes(value, errors='surrogate_or_strict'))
     return h.hexdigest()
 
 def get_encrypted_password(password, hashtype='sha512', salt=None, salt_size=None, rounds=None, ident=None):
@@ -725,7 +760,7 @@ def get_encrypted_password(password, hashtype='sha512', salt=None, salt_size=Non
     hashtype = passlib_mapping.get(hashtype, hashtype)
     return passlib_or_crypt(password, hashtype, salt=salt, salt_size=salt_size, rounds=rounds, ident=ident)
 
-def to_uuid(string, namespace=uuid.NAMESPACE_URL):
+def to_uuid(value, namespace=uuid.NAMESPACE_URL):
     uuid_namespace = namespace
     if not isinstance(uuid_namespace, uuid.UUID):
         try:
@@ -733,15 +768,13 @@ def to_uuid(string, namespace=uuid.NAMESPACE_URL):
         except (AttributeError, ValueError) as e:
             raise Exception("Invalid value '%s' for 'namespace': %s" % (to_native(namespace), to_native(e)))
     # uuid.uuid5() requires bytes on Python 2 and bytes or text or Python 3
-    return to_text(uuid.uuid5(uuid_namespace, to_native(string, errors='surrogate_or_strict')))
+    return to_text(uuid.uuid5(uuid_namespace, to_native(value, errors='surrogate_or_strict')))
 
-def mandatory(a, msg=None):
-    from jinja2.runtime import Undefined
-
+def mandatory(value, msg=None):
     ''' Make a variable mandatory '''
-    if isinstance(a, Undefined):
-        if a._undefined_name is not None:
-            name = "'%s' " % to_text(a._undefined_name)
+    if isinstance(value, Undefined):
+        if value._undefined_name is not None:
+            name = "'%s' " % to_text(value._undefined_name)
         else:
             name = ''
 
@@ -750,13 +783,13 @@ def mandatory(a, msg=None):
         else:
             raise Exception("Mandatory variable %s not defined." % name)
 
-    return a
+    return value
 
-def b64encode(string, encoding='utf-8'):
-    return to_text(base64.b64encode(to_bytes(string, encoding=encoding, errors='surrogate_or_strict')))
+def b64encode(value, encoding='utf-8'):
+    return to_text(base64.b64encode(to_bytes(value, encoding=encoding, errors='surrogate_or_strict')))
 
-def b64decode(string, encoding='utf-8'):
-    return to_text(base64.b64decode(to_bytes(string, errors='surrogate_or_strict')), encoding=encoding)
+def b64decode(value, encoding='utf-8'):
+    return to_text(base64.b64decode(to_bytes(value, errors='surrogate_or_strict')), encoding=encoding)
 
 def switch_mode(mode):
     mode = mode.upper()
@@ -797,24 +830,29 @@ def _aes_decrypt(word:str, key:str, mode='CBC', iv:str=None, input_format='base6
     mode = switch_mode(mode)
     return aes_decrypt(word.encode("utf-8"), key.encode("utf-8"), mode=mode, iv=iv.encode("utf-8"), input=input_format, padding=padding, padding_style=padding_style, no_packb=no_packb)
 
+
 jinja_globals = {
     # types
-    'quote_chinese': quote_chinese,
     'int': do_int,
     'float': do_float,
     'bool': to_bool,
     'utf8': utf8,
     'unicode': conver2unicode,
-    # time
-    'timestamp': timestamp,
-    'date_time': get_date_time,
-    # Calculate
-    'is_num': is_num,
-    'add': add,
-    'sub': sub,
-    'multiply': multiply,
-    'divide': divide,
-    'Faker': Faker,
+    'urlencode': urlencode_with_encoding,
+    'quote_chinese': quote_chinese,
+    # binascii
+    'b2a_hex': b2a_hex,
+    'a2b_hex': a2b_hex,
+    'b2a_uu': b2a_uu,
+    'a2b_uu': a2b_uu,
+    'b2a_base64': b2a_base64,
+    'a2b_base64': a2b_base64,
+    'b2a_qp': b2a_qp,
+    'a2b_qp': a2b_qp,
+    'crc_hqx': crc_hqx,
+    'crc32': crc32,
+    # format
+    'format': format,
     # base64
     'b64decode': b64decode,
     'b64encode': b64encode,
@@ -830,6 +868,16 @@ jinja_globals = {
     'hash': get_hash,
     'aes_encrypt': _aes_encrypt,
     'aes_decrypt': _aes_decrypt,
+    # time
+    'timestamp': timestamp,
+    'date_time': get_date_time,
+    # Calculate
+    'is_num': is_num,
+    'add': add,
+    'sub': sub,
+    'multiply': multiply,
+    'divide': divide,
+    'Faker': Faker,
     # regex
     'regex_replace': regex_replace,
     'regex_escape': regex_escape,
@@ -843,11 +891,11 @@ jinja_globals = {
     # undefined
     'mandatory': mandatory,
     # debug
-    'type_debug': lambda o: o.__class__.__name__,
+    'type_debug': lambda value: value.__class__.__name__,
 }
 
 jinja_inner_globals = {
     'dict': dict,
-    'lipsum': jinja2.utils.generate_lorem_ipsum,
+    'lipsum': generate_lorem_ipsum,
     'range': range,
 }

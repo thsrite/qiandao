@@ -8,6 +8,115 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Nothing right now.
 
+## [20230821] - 2023.08.21 更新
+
+### Fixed
+
+1. Fix 修复鼠标移动请求位置关系错乱的问题 (qd-today/qd#447)
+2. Fix 修复删除模板导致无限推送问题 (qd-today/qd#462)
+
+### Changed
+
+1. Update web and backend packages
+2. 优化企业微信推送错误提示
+
+## [20230718] - 2023.07.18 更新
+
+### Features
+
+1. 添加 `bianscii` 模块中的方法至 jinja_global 域
+2. `urlencode` 和 `urldecode` 支持指定编码 Feat qd-today/qd#437
+
+### Changed
+
+1. Add `html_unescape` option for unicode
+2. 在 about.html 中添加 `_proxy` 和 `__log__` 说明 About qd-today/qd#427
+3. 优化并完善 about.html 常用参数及过滤器信息显示
+4. 企业微信代理支持 https 和 http 前缀
+5. 优化注册推送 placeholder
+
+### Fixed
+
+1. Fix 后端与前端提取 header 正则不一致, 修改为以前端为准
+
+## [20230618] - 2023.06.18 更新
+
+### Features
+
+1. 为 for 循环段 添加 `loop` 信息, 支持基于 `range` 和 `list` 的 for 循环
+2. 测试中支持 if 控制语句, 优化测试中 if 控制语句的信息格式及错误信息显示
+3. 添加 while 循环 Feat qd-today/qd#371
+
+   > - 添加 `TASK_WHILE_LOOP_TIMEOUT` 环境变量, 单个 while 循环超时限制为 15 分钟;
+   > - 添加 `TASK_REQUEST_LIMIT` 环境变量, 单个任务中请求数限制为 1500;
+   > - 测试中支持 while 控制语句查看信息
+   > - while 循环中支持 `loop_index` 和 `loop_index0`
+   > - 具体可以查看前端 `关于` 页面信息
+
+4. 时间戳 API 加入更多转换功能 Feat qd-today/qd#388
+
+   > - 支持 `ts` 输入小数以输出毫秒及微秒级时间
+   > - 支持使用 `%f` 作为毫微秒时间的格式化字符串
+
+5. Telegram 消息标题增加 `hashtag` 以便于搜索 Feat qd-today/qd#401
+6. 添加 `COOKIE_SECURE_MODE` 环境变量配置, 用于 HTTPS 下的 Cookie 安全设置开关
+7. 添加 `STATIC_URL_PREFIX` 环境变量配置 Feat qd-today/qd#359
+8. 添加 `display_import_warning` 配置
+9. 允许使用 `update.sh` 修改 Alpine apk 镜像源
+
+### Changed
+
+1. 添加前端请求超时提示
+2. 订阅公共模板以文件名作为默认模板名
+3. 优化 `config.py` 文件配置内容顺序和注释
+4. 优化邮箱设置
+
+   > - 未配置 `DOMAIN` 环境变量或参数时, 禁止修改强制验证邮箱功能
+   > - 未配置 `DOMAIN` 时, 邮箱推送自动失效并在后端日志提示
+   > - 未配置 `DOMAIN` 时, 用户注册或修改密码时在前端提示
+   > - 邮箱域名 `MAIL_DOMAIN` 合并入 `DOMAIN` 变量
+   > - MailGun API 优化
+
+5. 优化网站管理页面错误显示效果
+6. 当设置重试间隔后允许重试间隔超过12小时
+7. Update deployment, update, faq in docs
+8. Clean and optimize code
+9. Add description for left button
+10. Update google analysis method
+11. Update requirements.txt, replace `pytz` with built-in `zoneinfo`
+
+### Fixed
+
+1. Fix server disconnected for subscribe
+2. Fix not display err msg for subscribe
+3. Fix `qd.py` failure
+4. Fix "Stream abnormally closed" which causes task not recorded in SQL db.
+5. Fix set empty `retry_interval` not work
+6. Fix typo
+
+## [20230601] - 2023.06.01 更新
+
+### Features
+
+1. 添加 WebSocket 支持
+2. 公共模板更新前端使用 WebSocket 推送更新进度
+
+> **Tips: 反代用户需要进行 WebSocket 相关反代配置的设置或修改**
+
+### Changed
+
+1. 允许用户设置公共模板加速方式
+2. update requirements packages
+3. 前端 Query String Parameters 为空时自动修正 Request Url
+4. 优化 Code quality
+
+### Fixed
+
+1. Fix 前端 RequestURL 自动将变量进行编码
+2. Fix RequestUrl 丢失 QueryString 的 bug
+3. Fix Request Payload 内容丢失的bug
+4. Fix typo
+
 ## [20230518] - 2023.05.18 更新
 
 ### Features
@@ -45,7 +154,7 @@ Nothing right now.
 ### Fixed
 
 1. 修复报错日志顺序异常 Fix qd-today/qd#391
-2. Mandatory smtp authentication. Fix qd-today/qd##394
+2. Mandatory smtp authentication. Fix qd-today/qd#394
 3. 修复网页显示时区与系统时区不一致 Fix qd-today/qd#396
 
 ## [20230228] - 2023.02.28 更新
@@ -165,9 +274,9 @@ Nothing right now.
 > 源码部署更新方式如下, 如**更新后发生错误请重新拉取容器!**
 
  ``` bash
-   # 先cd到源码所在目录, 执行命令后重启进程 
+   # 先cd到源码所在目录, 执行命令后重启进程
    wget https://fastly.jsdelivr.net/gh/qd-today/qd@master/update.sh -O ./update.sh && \
-   sh ./update.sh 
+   sh ./update.sh
    ```
 
 ## [20220208] - 2022.02.08 更新
@@ -327,20 +436,20 @@ Nothing right now.
 
    ```python
    # 以下为全局代理域名列表相关设置
-   # proxies为全局代理域名列表, 默认为空[], 表示不启用全局代理; 
-   # 代理格式应为'scheme://username:password@host:port',例如:proxies = ['http://admin:admin@127.0.0.1:8923','https://proxy.com:8888']; 
-   # 任务级代理请在新建或修改任务时添加,任务级代理优先级大于全局代理; 
-   proxies = os.getenv('PROXIES', '').split('|')               # 若希望部分地址不走代理, 请修改proxy_direct_mode及proxy_direct 
-   proxy_direct_mode = os.getenv('PROXY_DIRECT_MODE', '')      # 默认为空, 可选输入:'url'为网址匹配模式;'regexp'为正则表达式匹配模式;''空则不启用全局代理黑名单 
-   # proxy_direct_mode = os.getenv('PROXY_DIRECT_MODE', 'url')进入网址完全匹配模式, 在proxy_direct名单的url均不通过代理请求, 以'|'分隔url网址, url格式应为scheme://domain或scheme://domain:port 
-   # 例如: proxy_direct = os.getenv('PROXY_DIRECT', 'http://127.0.0.1:80|https://localhost'); 
-   # proxy_direct_mode= os.getenv('PROXY_DIRECT_MODE', 'regexp')进入正则表达式匹配模式, 满足正则表达式的网址均不通过代理请求; 
+   # proxies为全局代理域名列表, 默认为空[], 表示不启用全局代理;
+   # 代理格式应为'scheme://username:password@host:port',例如:proxies = ['http://admin:admin@127.0.0.1:8923','https://proxy.com:8888'];
+   # 任务级代理请在新建或修改任务时添加,任务级代理优先级大于全局代理;
+   proxies = os.getenv('PROXIES', '').split('|')               # 若希望部分地址不走代理, 请修改proxy_direct_mode及proxy_direct
+   proxy_direct_mode = os.getenv('PROXY_DIRECT_MODE', '')      # 默认为空, 可选输入:'url'为网址匹配模式;'regexp'为正则表达式匹配模式;''空则不启用全局代理黑名单
+   # proxy_direct_mode = os.getenv('PROXY_DIRECT_MODE', 'url')进入网址完全匹配模式, 在proxy_direct名单的url均不通过代理请求, 以'|'分隔url网址, url格式应为scheme://domain或scheme://domain:port
+   # 例如: proxy_direct = os.getenv('PROXY_DIRECT', 'http://127.0.0.1:80|https://localhost');
+   # proxy_direct_mode= os.getenv('PROXY_DIRECT_MODE', 'regexp')进入正则表达式匹配模式, 满足正则表达式的网址均不通过代理请求;
    # 启用regexp模式后自动采用以下默认匹配正则表达式, 如无特别需求请勿修改
    proxy_direct = os.getenv('PROXY_DIRECT', r"""(?xi)\A
                   ([a-z][a-z0-9+\-.]*://)?                                                        # Scheme
                   (0(.0){3}|127(.0){2}.1|localhost|\[::([\d]+)?\])                                # Domain/Hostname/IPv4/IPv6
                   (:[0-9]+)? """                                                                  # :Port
-                  ) 
+                  )
    ```
 
 ## [20210908] - 2021.09.08 更新
@@ -393,7 +502,7 @@ Nothing right now.
 
    ```bash
    # 如需使用Proxy功能请安装PyCurl
-   # Windows源码运行, 请执行 pip install pycurl==7.43.0.5 
+   # Windows源码运行, 请执行 pip install pycurl==7.43.0.5
    pip install pycurl # pip3 install pycurl
    # 如因curl导致500或599错误, 请卸载PyCurl或修改环境变量USE_PYCURL为False
    # pip uninstall pycurl

@@ -4,12 +4,16 @@
 # Created on 2014-08-02 10:07:33
 
 window.jinja_globals = [
-    'quote_chinese', 'int', 'float', 'bool', 'utf8', 'unicode', 'timestamp', 'date_time',
-    'is_num', 'add', 'sub', 'multiply', 'divide', 'Faker', 'b64decode',
+    'int', 'float', 'bool', 'utf8', 'unicode', 'quote_chinese',
+    'b2a_hex', 'a2b_hex', 'b2a_uu', 'a2b_uu', 'b2a_base64', 'a2b_base64',
+    'b2a_qp', 'a2b_qp', 'crc_hqx', 'crc32', 'format', 'b64decode',
     'b64encode', 'to_uuid', 'md5', 'sha1', 'password_hash', 'hash',
-    'aes_encrypt', 'aes_decrypt', 'regex_replace', 'regex_escape',
+    'aes_encrypt', 'aes_decrypt', 'timestamp', 'date_time', 'is_num',
+    'add', 'sub', 'multiply', 'divide', 'Faker', 'regex_replace', 'regex_escape',
     'regex_search', 'regex_findall', 'ternary', 'random', 'shuffle',
-    'mandatory', 'type_debug', 'dict', 'lipsum', 'range'
+    'mandatory', 'type_debug', 'dict', 'lipsum', 'range',
+    'loop_length', 'loop_first', 'loop_last', 'loop_index', 'loop_index0',
+    'loop_depth', 'loop_depth0', 'loop_revindex', 'loop_revindex0',
 ]
 jinja_globals = window.jinja_globals
 
@@ -44,7 +48,9 @@ define (require, exports, module) ->
         when mt.indexOf('javascript') != -1 then 'javascript'
         when mt in ['text/html', ] then 'document'
         when mt in ['text/css', 'application/x-pointplus', ] then 'style'
+        # deepcode ignore DuplicateCaseBody: order is important
         when mt.indexOf('application') == 0 then 'media'
+        # deepcode ignore DuplicateCaseBody: order is important
         else 'other'
     return har
 
@@ -151,7 +157,10 @@ define (require, exports, module) ->
           changed = true
       if changed
         query = utils.querystring_unparse_with_variables(url.query)
-        url.search = "?#{query}" if query
+        if query
+          url.search = "?#{query}"
+        else
+          url.search = ""
       entry.request.url = utils.url_unparse(url)
       entry.request.queryString = utils.dict2list(url.query)
 
@@ -191,15 +200,9 @@ define (require, exports, module) ->
 
         if exports.variables_in_entry(entry).length > 0
           entry.recommend = true
-        else if domain != utils.get_domain(entry.request.url)
+        else if domain != utils.get_domain(entry.request.url) || entry.response?.status in [304, 0]
           entry.recommend = false
-        else if entry.response?.status in [304, 0]
-          entry.recommend = false
-        else if entry.response?.status // 100 == 3
-          entry.recommend = true
-        else if entry.response?.cookies?.length > 0
-          entry.recommend = true
-        else if entry.request.method == 'POST'
+        else if entry.response?.status // 100 == 3 || entry.response.cookies?.length > 0 || entry.request.method == 'POST'
           entry.recommend = true
         else
           entry.recommend = false

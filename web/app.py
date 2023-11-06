@@ -23,14 +23,18 @@ class Application(tornado.web.Application):
         settings = dict(
                 template_path = os.path.join(os.path.dirname(__file__), "tpl"),
                 static_path = os.path.join(os.path.dirname(__file__), "static"),
+                static_url_prefix = config.static_url_prefix,
                 debug = config.debug,
                 gzip = config.gzip,
                 autoreload = config.autoreload,
 
                 cookie_secret = config.cookie_secret,
                 login_url = '/login',
+                websocket_ping_interval = config.websocket.ping_interval,
+                websocket_ping_timeout = config.websocket.ping_timeout,
+                websocket_max_message_size = config.websocket.max_message_size,
                 )
-        
+
         super(Application, self).__init__(handlers, **settings)
 
         self.jinja_env = jinja2.Environment(

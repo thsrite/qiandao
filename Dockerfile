@@ -16,7 +16,7 @@ RUN sed -i 's/mirrors.ustc.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositorie
     ssh-keyscan gitee.com > /root/.ssh/known_hosts && \
     let num=$RANDOM%100+10 && \
     sleep $num && \
-    git clone --depth 1 git@gitee.com:a76yyyy/qiandao.git /gitclone_tmp && \
+    git clone --depth 1 git@gitee.com:qd-today/qd.git /gitclone_tmp && \
     yes | cp -rf /gitclone_tmp/. /usr/src/app && \
     rm -rf /gitclone_tmp && \
     chmod +x /usr/src/app/update.sh && \
@@ -54,11 +54,11 @@ RUN sed -i 's/mirrors.ustc.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositorie
     sed -i '/aiohttp/d' requirements.txt && \
     sed -i '/typing-extensions/d' requirements.txt && \
     sed -i '/yarl/d' requirements.txt && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt --break-system-packages && \
     apk del .build_deps && \
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
     rm -rf /var/cache/apk/* && \
-    rm -rf /usr/share/man/* 
+    rm -rf /usr/share/man/*
 
 ENV PORT 80
 EXPOSE $PORT/tcp

@@ -2,7 +2,7 @@
 #
 # FILE: update.sh
 #
-# DESCRIPTION: Update QD for Python3 
+# DESCRIPTION: Update QD for Python3
 #
 # NOTES: This requires GNU getopt.
 #        I do not issue any guarantee that this will work for you!
@@ -23,9 +23,10 @@ cd "${_dir}" || exit
 # Treat unset variables as an error
 set -o nounset
 
-__ScriptVersion="2023.05.18"
+__ScriptVersion="2023.06.14"
 __ScriptName="update.sh"
 source_branch="master"
+alpine_mirrors="ustc"
 
 #-----------------------------------------------------------------------
 # FUNCTION: usage
@@ -40,6 +41,7 @@ Usage :  ${__ScriptName} [OPTION] ...
 Options:
   -h, --help                    Display help message
   -s, --script-version          Display script version
+  -m, --mirrors-alpine=ustc        Set Alpine mirrors (default|tsinghua|ustc|tencent|aliyun)
   -u, --update                  Default update method
   -v, --version=TAG_VERSION     Forced Update to the specified tag version
   -f, --force                   Forced version update
@@ -71,18 +73,77 @@ update_out_alpine() {
     echo "如需使用 DdddOCR API, 请确认安装 ddddocr Python模组 (如未安装, 请成功执行以下命令后重启 QD); " && \
     echo "pip3 install ddddocr" && \
     echo "如需使用 PyCurl 功能, 请确认安装 pycurl Python模组 (如未安装, 请成功执行以下命令后重启 QD); " && \
-    echo "pip3 install pycurl" 
+    echo "pip3 install pycurl"
+}
+
+set_alpine_mirrors() {
+    echo -e "Info: 当前 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+    case "$1" in
+        default | =default )
+            alpine_mirrors="default"
+            echo "Info: 正在设置 Alpine 镜像源为: 默认官方源"
+            sed -i 's/mirrors.tuna.tsinghua.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositories
+            sed -i 's/mirrors.ustc.edu.cn/dl-cdn.alpinelinux.org/g' /etc/apk/repositories
+            sed -i 's/mirrors.cloud.tencent.com/dl-cdn.alpinelinux.org/g' /etc/apk/repositories
+            sed -i 's/mirrors.aliyun.com/dl-cdn.alpinelinux.org/g' /etc/apk/repositories
+            echo -e "Info: 设置后的 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+            ;;
+        tsinghua | =tsinghua )
+            alpine_mirrors="tsinghua"
+            echo "Info: 正在设置 Alpine 镜像源为: 清华大学源"
+            sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.ustc.edu.cn/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.cloud.tencent.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.aliyun.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+            echo -e "Info: 设置后的 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+            ;;
+        ustc | =ustc )
+            alpine_mirrors="ustc"
+            echo "Info: 正在设置 Alpine 镜像源为: 中国科学技术大学源"
+            sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.tuna.tsinghua.edu.cn/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.cloud.tencent.com/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+            sed -i 's/mirrors.aliyun.com/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+            echo -e "Info: 设置后的 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+            ;;
+        tencent | =tencent )
+            alpine_mirrors="tencent"
+            echo "Info: 正在设置 Alpine 镜像源为: 腾讯云源"
+            sed -i 's/dl-cdn.alpinelinux.org/mirrors.cloud.tencent.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.tuna.tsinghua.edu.cn/mirrors.cloud.tencent.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.ustc.edu.cn/mirrors.cloud.tencent.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.aliyun.com/mirrors.cloud.tencent.com/g' /etc/apk/repositories
+            echo -e "Info: 设置后的 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+            ;;
+        aliyun | =aliyun )
+            alpine_mirrors="aliyun"
+            echo "Info: 正在设置 Alpine 镜像源为: 阿里云源"
+            sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.tuna.tsinghua.edu.cn/mirrors.aliyun.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.ustc.edu.cn/mirrors.aliyun.com/g' /etc/apk/repositories
+            sed -i 's/mirrors.cloud.tencent.com/mirrors.aliyun.com/g' /etc/apk/repositories
+            echo -e "Info: 设置后的 Alpine 镜像源: \n$(grep -o 'https://[^ ]*/' /etc/apk/repositories |  awk '!a[$0]++')"
+            ;;
+        * )
+            echo "Error: 未知的 Alpine 镜像源: $1"
+            echo "支持的 Alpine 镜像源: default, tsinghua, ustc, tencent, aliyun"
+            exit 1
+            ;;
+    esac
 }
 
 update_in_alpine() {
     # 当前版本号低于 20211228 时, 使用国内源并提示 DDDDOCR API 不可用
     if [ "$(echo "${localversion}" | awk '$1>20211228 {print 0} $1<=20211228 {print 1}')" == 1 ];then
-        echo "https://mirrors.ustc.edu.cn/alpine/edge/main" > /etc/apk/repositories 
-        echo "https://mirrors.ustc.edu.cn/alpine/edge/community" >> /etc/apk/repositories 
-        apk del .python-rundeps  
+        echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
+        echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+        set_alpine_mirrors "${alpine_mirrors}"
+        apk del .python-rundeps
         echo "Info: 如需使用DDDDOCR API, 请重新拉取最新容器 (32位系统暂不支持此API). "
     fi
     # 安装Python3及框架依赖
+    echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+    set_alpine_mirrors "${alpine_mirrors}" && \
     apk add --update --no-cache openssh-client python3 py3-six py3-markupsafe py3-pycryptodome py3-tornado py3-wrapt \
     py3-packaging py3-greenlet py3-urllib3 py3-cryptography py3-aiosignal py3-async-timeout py3-attrs py3-frozenlist \
     py3-multidict py3-charset-normalizer py3-aiohttp py3-typing-extensions py3-yarl && \
@@ -90,9 +151,9 @@ update_in_alpine() {
         echo "Info: QD-Lite will not install ddddocr related components. "
     else
         if [ "$(getconf LONG_BIT)" = "32" ];then
-            echo "Info: 32-bit systems do not support ddddocr, so there is no need to install numpy and opencv-python. " 
+            echo "Info: 32-bit systems do not support ddddocr, so there is no need to install numpy and opencv-python. "
         else
-            apk add --no-cache py3-opencv py3-pillow 
+            apk add --no-cache py3-opencv py3-pillow
         fi
     fi && \
     # 安装编译依赖
@@ -101,21 +162,20 @@ update_in_alpine() {
     # 判断是否存在python3
     if [ -x "/usr/bin/python3" ];then
         # 创建软链接
-        ln -sf /usr/bin/python3 /usr/bin/python 
+        ln -sf /usr/bin/python3 /usr/bin/python
         ln -sf /usr/bin/python3 /usr/local/bin/python
         # pypi 换源
-        sed -i 's/pypi.org/mirrors.cloud.tencent.com\/pypi/g' requirements.txt
         sed -i 's/pypi.tuna.tsinghua.edu.cn/mirrors.cloud.tencent.com\/pypi/g' requirements.txt
         # 删除Alpine已有的依赖包
-        sed -i '/ddddocr/d' requirements.txt 
-        sed -i '/packaging/d' requirements.txt 
-        sed -i '/wrapt/d' requirements.txt 
-        sed -i '/pycryptodome/d' requirements.txt 
-        sed -i '/tornado/d' requirements.txt 
-        sed -i '/MarkupSafe/d' requirements.txt 
-        sed -i '/pillow/d' requirements.txt 
-        sed -i '/opencv/d' requirements.txt 
-        sed -i '/numpy/d' requirements.txt 
+        sed -i '/ddddocr/d' requirements.txt
+        sed -i '/packaging/d' requirements.txt
+        sed -i '/wrapt/d' requirements.txt
+        sed -i '/pycryptodome/d' requirements.txt
+        sed -i '/tornado/d' requirements.txt
+        sed -i '/MarkupSafe/d' requirements.txt
+        sed -i '/pillow/d' requirements.txt
+        sed -i '/opencv/d' requirements.txt
+        sed -i '/numpy/d' requirements.txt
         sed -i '/greenlet/d' requirements.txt
         sed -i '/urllib3/d' requirements.txt
         sed -i '/cryptography/d' requirements.txt
@@ -131,8 +191,8 @@ update_in_alpine() {
     fi && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --compile --upgrade pycurl && \
-    apk del .build_deps 
-    rm -rf /var/cache/apk/* 
+    apk del .build_deps
+    rm -rf /var/cache/apk/*
     rm -rf /usr/share/man/*
 }
 
@@ -143,9 +203,9 @@ echo_auto_reload() {
 }
 
 update_version() {
-    wget https://gitee.com/a76yyyy/qiandao/raw/"${remoteversion}"/requirements.txt -O /usr/src/app/requirements.txt && \
-    if grep -q -E "Alpine|alpine" /etc/issue 
-    then 
+    wget https://gitee.com/qd-today/qd/raw/"${remoteversion}"/requirements.txt -O /usr/src/app/requirements.txt && \
+    if grep -q -E "Alpine|alpine" /etc/issue
+    then
         update_in_alpine
     else
         update_out_alpine
@@ -216,7 +276,7 @@ update() {
                 fi
             else
                 echo "'$1' is not correct type of tag"
-                echo "For available version tags, see 'https://gitee.com/a76yyyy/qiandao/tags'"
+                echo "For available version tags, see 'https://gitee.com/qd-today/qd/tags'"
             fi
         fi
     else
@@ -239,8 +299,8 @@ update() {
 if [ $# == 0 ]; then update; exit 0; fi
 
 # parse options:
-RET=$(getopt -o hsuv:flr \
-    --long help,script-version,update,version:,force,local,remote \
+RET=$(getopt -o hsm:uv:flr \
+    --long help,script-version,mirrors-alpine:,update,version:,force,local,remote \
     -n ' * ERROR' -- "$@")
 
 exitcode=$?
@@ -253,7 +313,10 @@ eval set -- "$RET"
 while true; do
     case "$1" in
         -h | --help ) usage; exit 1 ;;
+
         -s | --script-version ) echo "$(basename "$0") -- version $__ScriptVersion"; exit 1 ;;
+
+        -m | --mirrors-alpine ) set_alpine_mirrors "$2"; shift 2;;
 
         -u | --update ) update; exit 0 ;;
 

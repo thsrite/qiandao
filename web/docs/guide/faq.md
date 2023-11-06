@@ -14,13 +14,13 @@ docker cp database.db container_name:/usr/src/app/config/
 ## how to configure the email server in Docker?
 
 ``` sh
-docker run -d --name qd -p 8923:80 -v $(pwd)/qd/config:/usr/src/app/config --env MAIL_SMTP=$STMP_Server_ --env MAIL_PORT=$Mailbox_server_port --env MAIL_USER=$Username --env MAIL_PASSWORD=$Password --env DOMAIN=$Domain a76yyyy/qiandao
+docker run -d --name qd -p 8923:80 -v $(pwd)/qd/config:/usr/src/app/config --env MAIL_SMTP=$STMP_Server_ --env MAIL_PORT=$Mailbox_server_port --env MAIL_USER=$Username --env MAIL_PASSWORD=$Password --env DOMAIN=$Domain qdtoday/qd
 ```
 
 ## how to use MySQL in Docker?
 
 ``` sh
-docker run -d --name qd -p 8923:80 -v $(pwd)/qd/config:/usr/src/app/config --ENV DB_TYPE=mysql --ENV JAWSDB_MARIA_URL=mysql://$username:$password@$hostname:$port/$database_name?auth_plugin= a76yyyy/qiandao
+docker run -d --name qd -p 8923:80 -v $(pwd)/qd/config:/usr/src/app/config --ENV DB_TYPE=mysql --ENV JAWSDB_MARIA_URL=mysql://$username:$password@$hostname:$port/$database_name?auth_plugin= qdtoday/qd
 ```
 
 ## how to build a Docker image by myself?
@@ -50,6 +50,32 @@ Empirically, the following requests are necessary:
 In order to help users initiate requests, user names and passwords still need to be recorded. This can only rely on the self-discipline of server maintainers to ensure the security of back-end data. But in the framework design, each user is encrypted with a secure key when storing. Encrypting user data with a key can ensure that user data cannot be decrypted only by obtaining the database. (Encrypted user data includes templates uploaded by users, variables set by users for tasks, etc.)
 
 If you are still worried, you can build the QD framework by yourself, download the template and run it on your own server.
+
+## Prompt `PermissionError: [Errno 1] Operation not permitted`
+
+1. If it is an ARM32 Debian system, please check whether the `Docker` version is less than `20.10.0`, and whether the `libseccomp` version is less than `2.4.4`. If so, please upgrade the above components.
+
+    Update `libseccomp` reference operation:
+
+    ```sh
+    # Get signing keys to verify the new packages, otherwise they will not install
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC 648ACFD622F3D138
+
+    # Add the Buster backport repository to apt sources.list
+    echo 'deb http://httpredir.debian.org/debian buster-backports main contrib non-free' | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
+
+    sudo apt update
+    sudo apt install libseccomp2 -t buster-backports
+    ```
+
+    > Source:
+    >
+    > - <https://github.com/Taxel/PlexTraktSync/pull/474>
+    > - <https://stackoverflow.com/questions/70195968/dockerfile-raspberry-pi-python-pip-install-permissionerror-errno-1-operation>
+
+2. Check if the `/usr/src/app` directory inside the container is mapped to the outside of the container.
+
+    > Note that the framework only needs to map the `/usr/src/app/config` directory.
 
 ## Prompt warning message: `Connect Redis falied: Error 10061`
 
@@ -81,18 +107,36 @@ However, `pycurl` is not required in this framework, if you don't need to use th
 
 You can register different notification tools to receive notifications when specific events (such as failed check-ins) occur.
 
-### TgBot
+Please refer to [Pusher](/toolbox/pusher) for details.
 
-Assuming you have created a Telegram bot API with a custom domain::
+## Subscribe updating page prompts undefined error
 
-`https://tg.mydomain.com/bot1111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/sendMessage?chat_id=222222222&text=HelloWorld`
+- [issue#423](https://github.com/qd-today/qd/issues/423)
 
-The above request will send a `HelloWorld` message to the chat with ID `222222222`. When registering TgBot as a notification method:
+> The subscribe updating web page prompts an error code of undefined, or the console shows WebSocket connection failed but does not show the reason for the error
 
-- `TG_TOKEN` should be filled with the combination of the bot ID and corresponding key, but without `bot`. That is, the token provided by BotFather when applying for TgBot: `1111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
-- `TG_USERID` should be filled with the `chat_id` field in the Telegram API, that is, `222222222`
-- `TG_HOST` should be filled with `tg.mydomain.com`, and it can also include the `http://` or `https://` prefix
+Please check if the "reverse proxy" configuration is correct, refer to [Nginx reverse proxy WebSocket service connection error](https://blog.csdn.net/tiven_/article/details/126126442)
 
-Therefore, the final result looks like:
-
-`1111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;222222222;tg.mydomain.com`
+> Reference configuration is as follows:
+>
+> ``` Nginx
+> server {
+>     listen 80;
+>     # Modify server_name  by yourself
+>     server_name qd.example.com;
+>     location / {
+>         proxy_pass http://ip:port;
+>
+>         # Set WebSocket Configuration
+>         proxy_http_version 1.1;
+>         proxy_set_header Upgrade $http_upgrade;
+>         proxy_set_header Connection "upgrade";
+>
+>         # Set other optional configuration
+>         proxy_set_header  Host $host;
+>         proxy_set_header  X-Real-IP  $remote_addr;
+>         proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+>         proxy_set_header  X-Forwarded-Proto  $scheme;
+>     }
+> }
+> ```

@@ -32,67 +32,67 @@
       </tr>
     </thead>
     <tbody style="text-align:center;font-size:xx-small" >
-      
+
       <tr>
         <td>时间戳</td>
           <td id="api_url1" class="showbut">
             <a href="/util/timestamp" target="_blank" rel="nofollow">api://util/timestamp</a>
           <button class="btn hljs-button" data-clipboard-target="#api_url1">复制</button>
         </td>
-        <td>ts,form<br></td>
+        <td>ts,form,dt<br></td>
         <td>否</td>
-        <td>默认返回当前时间戳和时间<br>如果参数带时间戳ts, 返回ts所对应时间;<br>如果参数带时间格式form，返回相应格式的本机和北京时间，默认"form=%Y-%m-%d %H:%M:%S"</td>
+        <td>默认返回当前时间戳和时间<br>如果参数带时间戳ts, 返回ts所对应时间;<br>如果参数带时间格式form，返回相应格式的本机和北京时间，默认"form=%Y-%m-%d %H:%M:%S"<br>如果参数带时间字符串 dt, 返回 dt 对应的时间信息, <br>dt 优先级大于 ts, 指定 dt 须同时指定 form</td>
 
           <td id="api_exam1" class="showbut">
             <div class="autowrap">
-              <a href="/util/timestamp?ts=1625068800&form=%Y-%m-%d %H:%M:%S" target="_blank" rel="nofollow"> 
-          api://util/timestamp?ts=1625068800&form=%Y-%m-%d %H:%M:%S
+              <a href="/util/timestamp?ts=1625068800.123456&form=%Y-%m-%d %H:%M:%S.%f&dt=2000-01-01 00:00:00.000000" target="_blank" rel="nofollow">
+          api://util/timestamp?ts=1625068800.123456&form=%Y-%m-%d %H:%M:%S.%f&dt=2000-01-01 00:00:00.000000
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam1">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>Unicode转中文</td>
           <td id="api_url2" class="showbut">
             <a href="/util/unicode" target="_blank" rel="nofollow">api://util/unicode</a>
           <button class="btn hljs-button" data-clipboard-target="#api_url2">复制</button>
         </td>
-        <td>content</td>
+        <td>html_unescape,content</td>
         <td>是</td>
-        <td>content: 要转码的内容</td>
+        <td>html_unescape: 是否进行 html 反转义, 默认为 False, <br>启用该参数需对 content 进行 urlencode 编码<br>content: 要转码的内容</td>
 
           <td id="api_exam2" class="showbut">
             <div class="autowrap">
-              <a href="/util/unicode?content=%E4%BB%8A%E6%97%A5QD%EF%BC%9A1%5Cu5929%5Cu5ef6%5Cu4fdd" target="_blank" rel="nofollow"> 
-                api://util/unicode?content=今日QD：1\u5929\u5ef6\u4fdd
+              <a href="/util/unicode?html_unescape=true&content=%E4%BB%8A%E6%97%A5QD%EF%BC%9A%26gt%3B%26%238722%3B1%5Cu5929" target="_blank" rel="nofollow">
+                api://util/unicode?html_unescape=true&content=今日QD：&gt;&#8722;1\u5929
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam2">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>Url转中文</td>
           <td id="api_url3" class="showbut">
             <a href="/util/urldecode" target="_blank" rel="nofollow">api://util/urldecode</a>
           <button class="btn hljs-button" data-clipboard-target="#api_url3">复制</button>
         </td>
-        <td>content</td>
+        <td>unquote_plus,encoding,content</td>
         <td>是</td>
-        <td>要转码的内容</td>
+        <td>unquote_plus: 是否将加号(+)解码为空格( ), <br>默认为 False, 仅在 encoding 为 utf-8 时生效. <br>encoding: 指定编码, 默认为 utf-8<br>content:要转码的 urlencoded 内容, <br>如果 content 为非 utf-8 编码的 urlencoded 字符串, 请再次进行 urlencode 编码后再传入</td>
 
           <td id="api_exam3" class="showbut">
             <div class="autowrap">
-              <a href="/util/urldecode?content=%E7%AD%BE%E5%88%B0%E6%88%90%E5%8A%9F%EF%BC%81%E6%AF%8F%E6%97%A5%E7%AD%BE%E5%88%B0%E8%8E%B7%E5%BE%97%2C" target="_blank" rel="nofollow"> 
+              <a href="/util/urldecode?content=%E7%AD%BE%E5%88%B0%E6%88%90%E5%8A%9F%EF%BC%81%E6%AF%8F%E6%97%A5%E7%AD%BE%E5%88%B0%E8%8E%B7%E5%BE%97%2C" target="_blank" rel="nofollow">
           api://util/urldecode?content=%E7%AD%BE%E5%88%B0%E6%88%90%E5%8A%9F%EF%BC%81%E6%AF%8F%E6%97%A5%E7%AD%BE%E5%88%B0%E8%8E%B7%E5%BE%97%2C
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam3">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>正则表达式</td>
           <td id="api_url4" class="showbut">
@@ -105,14 +105,14 @@
 
           <td id="api_exam4" class="showbut">
             <div class="autowrap">
-              <a href="/util/regex?data=%7b%22code%22%3a0%2c%22msg%22%3a%22%E6%88%90%E5%8A%9F%22%2c%22data%22%3a%7b%22users%22%3a%5b%7b%22name%22%3a%22%E5%BC%A0%E4%B8%89%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a12%7d%2c%7b%22name%22%3a%22%E6%9D%8E%E5%9B%9B%22%2c%22gender%22%3a%22female%22%2c%22age%22%3a15%7d%2c%7b%22name%22%3a%22%E7%8E%8B%E4%BA%94%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a22%7d%2c%7b%22name%22%3a%22%E8%B5%B5%E5%85%AD%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a24%7d%5d%2c%22goods%22%3a%5b%7b%22name%22%3a%22apple%22%2c%22price%22%3a15%2c%22num%22%3a200%7d%2c%7b%22name%22%3a%22pear%22%2c%22price%22%3a18%2c%22num%22%3a100%7d%2c%7b%22name%22%3a%22banana%22%2c%22price%22%3a16%2c%22num%22%3a210%7d%5d%7d%7d&p=name%22%3a%22(.%2b%3f)" target="_blank" rel="nofollow"> 
+              <a href="/util/regex?data=%7b%22code%22%3a0%2c%22msg%22%3a%22%E6%88%90%E5%8A%9F%22%2c%22data%22%3a%7b%22users%22%3a%5b%7b%22name%22%3a%22%E5%BC%A0%E4%B8%89%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a12%7d%2c%7b%22name%22%3a%22%E6%9D%8E%E5%9B%9B%22%2c%22gender%22%3a%22female%22%2c%22age%22%3a15%7d%2c%7b%22name%22%3a%22%E7%8E%8B%E4%BA%94%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a22%7d%2c%7b%22name%22%3a%22%E8%B5%B5%E5%85%AD%22%2c%22gender%22%3a%22male%22%2c%22age%22%3a24%7d%5d%2c%22goods%22%3a%5b%7b%22name%22%3a%22apple%22%2c%22price%22%3a15%2c%22num%22%3a200%7d%2c%7b%22name%22%3a%22pear%22%2c%22price%22%3a18%2c%22num%22%3a100%7d%2c%7b%22name%22%3a%22banana%22%2c%22price%22%3a16%2c%22num%22%3a210%7d%5d%7d%7d&p=name%22%3a%22(.%2b%3f)" target="_blank" rel="nofollow">
                 api://util/regex?data={"code":0,"msg":"成功","data":{"users":[{"name":"张三","gender":"male","age":12},{"name":"李四","gender":"female","age":15},{"name":"王五","gender":"male","age":22},{"name":"赵六","gender":"male","age":24}],"goods":[{"name":"apple","price":15,"num":200},{"name":"pear","price":18,"num":100},{"name":"banana","price":16,"num":210}]}}&p=name":"(.+?)
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam4">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>字符串替换</td>
           <td id="api_url5" class="showbut">
@@ -125,14 +125,14 @@
 
           <td id="api_exam5" class="showbut">
             <div class="autowrap">
-              <a href="/util/string/replace?p=%E4%BA%BA&t=%E5%AD%97%E7%AC%A6%E4%B8%B2&s=%7B%22text%22:%22%E6%88%91%E6%98%AF%E4%BA%BA%22%7D" target="_blank" rel="nofollow"> 
+              <a href="/util/string/replace?p=%E4%BA%BA&t=%E5%AD%97%E7%AC%A6%E4%B8%B2&s=%7B%22text%22:%22%E6%88%91%E6%98%AF%E4%BA%BA%22%7D" target="_blank" rel="nofollow">
                 api://util/string/replace?p=人&t=字符串&s={"text":"我是人"}
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam5">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>延时</td>
           <td id="api_url6" class="showbut">
@@ -145,14 +145,14 @@
 
           <td id="api_exam6" class="showbut">
             <div class="autowrap">
-              <a href="/util/delay?seconds=1.5" target="_blank" rel="nofollow"> 
+              <a href="/util/delay?seconds=1.5" target="_blank" rel="nofollow">
           api://util/delay?seconds=1.5
               </a>
             </div>
           <button class="btn hljs-button" data-clipboard-target="#api_exam6">复制</button>
         </td>
       </tr>
-      
+
       <tr>
         <td>RSA加密/解密</td>
           <td id="api_url7" class="showbut">
@@ -165,7 +165,7 @@
 
           <td id="api_exam7" class="showbut">
             <div class="autowrap">
-              <a href="/util/rsa?key=-----BEGIN%20OPENSSH%20PRIVATE%20KEY-----b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcnNhAAAAAwEAAQAAAYEA2FD1IBCZcDgu7BjS2iySxTUlYWEWdkVB7xdmKJT4kUTEdEve7lvJb6PalpW8k1l1N7r%2FvFRDvSMe1Rd1Sc9n7dsOacCMsjy8Q5UDPGQ7ccahTDI7ygSA3igmasn9g5l21Sm04mP0riFzSybP7Xvne6EE5P6%2FCnO20kk6wWXmohhaIJjVpEhJ4%2FfMVWWHPggD90aKCEMKQJAL%2BFmLTpNl2t9jEUZczzKVlgEQEssnMZERiS4hwKFMy8qmupjjddGtyjNWR6WEE%2BKjj%2FKexcthFYWNAb2m8K%2F5jna439sxOe17PUMSCAbxjr4rRZTWRqk8FTSVwW5EZmBKAJCXMJIM8gaH9vG3VHt8btE0y0w8pgRbQ2bsTZ%2F3OTLHKQtPS7QMs4Ko%2FZ7LWHEzanUgZvWgvuv8SPEtXRVO%2BBuCsB6BV8RA4JbGogEx54oDn3Imo1%2BnWfrLte2tA%2BGiQXod9pwm9lVZ0L7oHL%2By9OXCPFSPt5G8II%2Bztid4yd8%2BD7PMFUp9AAAFgK0XbqqtF26qAAAAB3NzaC1yc2EAAAGBANhQ9SAQmXA4LuwY0tosksU1JWFhFnZFQe8XZiiU%2BJFExHRL3u5byW%2Bj2paVvJNZdTe6%2F7xUQ70jHtUXdUnPZ%2B3bDmnAjLI8vEOVAzxkO3HGoUwyO8oEgN4oJmrJ%2FYOZdtUptOJj9K4hc0smz%2B1753uhBOT%2BvwpzttJJOsFl5qIYWiCY1aRISeP3zFVlhz4IA%2FdGighDCkCQC%2FhZi06TZdrfYxFGXM8ylZYBEBLLJzGREYkuIcChTMvKprqY43XRrcozVkelhBPio4%2FynsXLYRWFjQG9pvCv%2BY52uN%2FbMTntez1DEggG8Y6%2BK0WU1kapPBU0lcFuRGZgSgCQlzCSDPIGh%2Fbxt1R7fG7RNMtMPKYEW0Nm7E2f9zkyxykLT0u0DLOCqP2ey1hxM2p1IGb1oL7r%2FEjxLV0VTvgbgrAegVfEQOCWxqIBMeeKA59yJqNfp1n6y7XtrQPhokF6HfacJvZVWdC%2B6By%2FsvTlwjxUj7eRvCCPs7YneMnfPg%2BzzBVKfQAAAAMBAAEAAAGAPxbNhz6QIcShGsbaqDsby1yGvHH%2BhRwJ8NuYNfnMzUGLMof2SvqGM4NMe2LMjwUmRMzLTXgeEYmusmOXF6HgI%2BUhvQIlhs5j8ioBuZlaJQLThE%2BaVH8fvqtjGP40bC9UEzOIyAZzFF45LA%2Fz0MW0a8A4lzkdKsU46vfkpQc9TsVfc%2BZfWPykYFKjS7zCxvq7fWEbXPGAiff5JcOn95DRwhYo5J7q7ptIOWmx8GlD0xcGUEYeHfptVXqTShTRMkmmpuLq%2FuSYWsfIbwcJYXNx1cqVP8VRvM%2FFl3uAyo%2Bw7BW0JFcP%2FAKnCvnWAYfY6qjdYqewuUES3p5Boy0KpsBpg50LtWOoM7JXNdnh9M0Ahwkwq2uoU%2BUklHEaM3IxJI6LVKG2Wv4MU%2FxXqAPYa1P2iG8x7Gx0UoIlI3GTgS7MdGxWzgC1qL%2FV%2BCobEWivjw%2FDfCturoAyIbirWMK6UK4WEx1f8uyAjeNTMB%2BiRMn9J4HRMVK%2B6fI6AzFHBOi8nFnBAAAAwQCarv5a2crBXULhVwPZGDwsaSz77cMxo8%2FgvKoOdSMaLeJ4nRvM7WiikJ%2BCF8rXjkV92U%2F9cHebeP1HS3ioyfTVaKdqSUnPUNe9UOtaoKQsiJg%2BMLFjgL80iNGBOqY3wShgN7kNdxalXHkSjaeRbMnB6VPuamKczZksi41MuByJVN9n1kQNyZJ3YSotK5CjjSrQIgbbYldYrbG0rrqrlvt%2BqjWLJLrJYbmFcMQSWtWtEk6WadhJ8wsFj3qoyNcqoBcAAADBAPHb59bPUJhRggiKhFum8r5u4Ad%2BEpYbSAf%2FeTGLiSBzKVwfQTZVZtbD8aw0Uo4Lja2kGXywz1R0bHo7kYu9fUeqvTYI6uPnRWC94EFxS%2BUhy6kQa%2BHluSFAlBMpl8%2Fd0wICMhKTovgAMSrLV1%2Fr%2FMwDnQdNRhn8qWgP0wNwN6Y8AWhwEVZjtxdAba34eMtZ60RnP4i77kmwfp0uHl1hf7j1cEMgEYisrWHEPVmpuvTnO2f65b03i%2F5vA9hcmBCgRQAAAMEA5Pa7sizCQ43fn3fZJ%2BNLoop8uuPsFA7jhOXETP0iRsQBwo9pz2GfiW%2FwbS5WT51%2BP6NMR%2B4uOTPIuBe1sEEES0%2FhiwzHTi154pYNOSk4U637klnhUGmHLE7mR%2BMaDG9yTfm25um8saZKzxXqyixbl8GiQUKasWW%2BUa1AJswNfM4yvbj%2Bnh%2FyqDavQ12KRkkKz6aikjHsj3TeTH0%2Boq3u0wn%2BSDXQkq7aIlkfdytGGfo8v344YvGIYRrbA5C4drDZAAAABnB1YmxpYwECAwQ%3D-----END%20OPENSSH%20PRIVATE%20KEY-----&data=Test&f=encode" target="_blank" rel="nofollow"> 
+              <a href="/util/rsa?key=-----BEGIN%20OPENSSH%20PRIVATE%20KEY-----b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcnNhAAAAAwEAAQAAAYEA2FD1IBCZcDgu7BjS2iySxTUlYWEWdkVB7xdmKJT4kUTEdEve7lvJb6PalpW8k1l1N7r%2FvFRDvSMe1Rd1Sc9n7dsOacCMsjy8Q5UDPGQ7ccahTDI7ygSA3igmasn9g5l21Sm04mP0riFzSybP7Xvne6EE5P6%2FCnO20kk6wWXmohhaIJjVpEhJ4%2FfMVWWHPggD90aKCEMKQJAL%2BFmLTpNl2t9jEUZczzKVlgEQEssnMZERiS4hwKFMy8qmupjjddGtyjNWR6WEE%2BKjj%2FKexcthFYWNAb2m8K%2F5jna439sxOe17PUMSCAbxjr4rRZTWRqk8FTSVwW5EZmBKAJCXMJIM8gaH9vG3VHt8btE0y0w8pgRbQ2bsTZ%2F3OTLHKQtPS7QMs4Ko%2FZ7LWHEzanUgZvWgvuv8SPEtXRVO%2BBuCsB6BV8RA4JbGogEx54oDn3Imo1%2BnWfrLte2tA%2BGiQXod9pwm9lVZ0L7oHL%2By9OXCPFSPt5G8II%2Bztid4yd8%2BD7PMFUp9AAAFgK0XbqqtF26qAAAAB3NzaC1yc2EAAAGBANhQ9SAQmXA4LuwY0tosksU1JWFhFnZFQe8XZiiU%2BJFExHRL3u5byW%2Bj2paVvJNZdTe6%2F7xUQ70jHtUXdUnPZ%2B3bDmnAjLI8vEOVAzxkO3HGoUwyO8oEgN4oJmrJ%2FYOZdtUptOJj9K4hc0smz%2B1753uhBOT%2BvwpzttJJOsFl5qIYWiCY1aRISeP3zFVlhz4IA%2FdGighDCkCQC%2FhZi06TZdrfYxFGXM8ylZYBEBLLJzGREYkuIcChTMvKprqY43XRrcozVkelhBPio4%2FynsXLYRWFjQG9pvCv%2BY52uN%2FbMTntez1DEggG8Y6%2BK0WU1kapPBU0lcFuRGZgSgCQlzCSDPIGh%2Fbxt1R7fG7RNMtMPKYEW0Nm7E2f9zkyxykLT0u0DLOCqP2ey1hxM2p1IGb1oL7r%2FEjxLV0VTvgbgrAegVfEQOCWxqIBMeeKA59yJqNfp1n6y7XtrQPhokF6HfacJvZVWdC%2B6By%2FsvTlwjxUj7eRvCCPs7YneMnfPg%2BzzBVKfQAAAAMBAAEAAAGAPxbNhz6QIcShGsbaqDsby1yGvHH%2BhRwJ8NuYNfnMzUGLMof2SvqGM4NMe2LMjwUmRMzLTXgeEYmusmOXF6HgI%2BUhvQIlhs5j8ioBuZlaJQLThE%2BaVH8fvqtjGP40bC9UEzOIyAZzFF45LA%2Fz0MW0a8A4lzkdKsU46vfkpQc9TsVfc%2BZfWPykYFKjS7zCxvq7fWEbXPGAiff5JcOn95DRwhYo5J7q7ptIOWmx8GlD0xcGUEYeHfptVXqTShTRMkmmpuLq%2FuSYWsfIbwcJYXNx1cqVP8VRvM%2FFl3uAyo%2Bw7BW0JFcP%2FAKnCvnWAYfY6qjdYqewuUES3p5Boy0KpsBpg50LtWOoM7JXNdnh9M0Ahwkwq2uoU%2BUklHEaM3IxJI6LVKG2Wv4MU%2FxXqAPYa1P2iG8x7Gx0UoIlI3GTgS7MdGxWzgC1qL%2FV%2BCobEWivjw%2FDfCturoAyIbirWMK6UK4WEx1f8uyAjeNTMB%2BiRMn9J4HRMVK%2B6fI6AzFHBOi8nFnBAAAAwQCarv5a2crBXULhVwPZGDwsaSz77cMxo8%2FgvKoOdSMaLeJ4nRvM7WiikJ%2BCF8rXjkV92U%2F9cHebeP1HS3ioyfTVaKdqSUnPUNe9UOtaoKQsiJg%2BMLFjgL80iNGBOqY3wShgN7kNdxalXHkSjaeRbMnB6VPuamKczZksi41MuByJVN9n1kQNyZJ3YSotK5CjjSrQIgbbYldYrbG0rrqrlvt%2BqjWLJLrJYbmFcMQSWtWtEk6WadhJ8wsFj3qoyNcqoBcAAADBAPHb59bPUJhRggiKhFum8r5u4Ad%2BEpYbSAf%2FeTGLiSBzKVwfQTZVZtbD8aw0Uo4Lja2kGXywz1R0bHo7kYu9fUeqvTYI6uPnRWC94EFxS%2BUhy6kQa%2BHluSFAlBMpl8%2Fd0wICMhKTovgAMSrLV1%2Fr%2FMwDnQdNRhn8qWgP0wNwN6Y8AWhwEVZjtxdAba34eMtZ60RnP4i77kmwfp0uHl1hf7j1cEMgEYisrWHEPVmpuvTnO2f65b03i%2F5vA9hcmBCgRQAAAMEA5Pa7sizCQ43fn3fZJ%2BNLoop8uuPsFA7jhOXETP0iRsQBwo9pz2GfiW%2FwbS5WT51%2BP6NMR%2B4uOTPIuBe1sEEES0%2FhiwzHTi154pYNOSk4U637klnhUGmHLE7mR%2BMaDG9yTfm25um8saZKzxXqyixbl8GiQUKasWW%2BUa1AJswNfM4yvbj%2Bnh%2FyqDavQ12KRkkKz6aikjHsj3TeTH0%2Boq3u0wn%2BSDXQkq7aIlkfdytGGfo8v344YvGIYRrbA5C4drDZAAAABnB1YmxpYwECAwQ%3D-----END%20OPENSSH%20PRIVATE%20KEY-----&data=Test&f=encode" target="_blank" rel="nofollow">
           api://util/rsa?key=-----BEGIN%20OPENSSH%20PRIVATE%20KEY-----...-----END%20OPENSSH%20PRIVATE%20KEY-----&data=Test&f=encode
               </a>
             </div>
@@ -201,7 +201,7 @@
 
           <td id="api_exam9" class="showbut">
             <div class="autowrap">
-              <a href="/util/gb2312?content=%E4%B8%AD%E6%96%87%E7%BD%91%E7%AB%99" target="_blank" rel="nofollow"> 
+              <a href="/util/gb2312?content=%E4%B8%AD%E6%96%87%E7%BD%91%E7%AB%99" target="_blank" rel="nofollow">
                 api://util/gb2312?content=中文网站
               </a>
             </div>
@@ -221,7 +221,7 @@
 
           <td id="api_exam10" class="showbut">
             <div class="autowrap">
-              <a href="/util/dddd/ocr?imgurl=http%3A%2F%2Fp18.qhimg.com%2Ft01aec2530f64d9b9d6.png" target="_blank" rel="nofollow"> 
+              <a href="/util/dddd/ocr?imgurl=http%3A%2F%2Fp18.qhimg.com%2Ft01aec2530f64d9b9d6.png" target="_blank" rel="nofollow">
                 api://util/dddd/ocr?imgurl=http://p18.qhimg.com/t01aec2530f64d9b9d6.png
               </a>
             </div>
@@ -241,7 +241,7 @@
 
           <td id="api_exam11" class="showbut">
             <div class="autowrap">
-              <a href="/util/dddd/det?imgurl=http%3A%2F%2Fp18.qhimg.com%2Ft01aec2530f64d9b9d6.png" target="_blank" rel="nofollow"> 
+              <a href="/util/dddd/det?imgurl=http%3A%2F%2Fp18.qhimg.com%2Ft01aec2530f64d9b9d6.png" target="_blank" rel="nofollow">
                 api://util/dddd/det?imgurl=http://p18.qhimg.com/t01aec2530f64d9b9d6.png
               </a>
             </div>
@@ -261,7 +261,7 @@
 
           <td id="api_exam11" class="showbut">
             <div class="autowrap">
-              <a href="/util/dddd/slide?imgtarget=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_target.png&imgbg=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_bg.png" target="_blank" rel="nofollow"> 
+              <a href="/util/dddd/slide?imgtarget=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_target.png&imgbg=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_bg.png" target="_blank" rel="nofollow">
                 api://util/dddd/slide?imgtarget=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_target.png&imgbg=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fqd-today%2Fqd%40master%2Fweb%2Fstatic%2Fimg%2Fslide_bg.png
               </a>
             </div>
@@ -284,33 +284,208 @@
       </tr>
     </thead>
     <tbody style="text-align:center;font-size:xx-small">
-      
+
       <tr>
-        <td>{{unicode(a)}}</td>
-        <td>将 a 由 Unicode 转为中文（和上面 API 相同）</td>
-        <td>{{unicode("\u4f60\u597d")}}</td>
-        <td class="autowrap">你好</td>
+        <td>{{_proxy}}</td>
+        <td>代理, 用于HAR模板单个请求的测试. 格式: <br>scheme://username:password@hostname:port <br>支持HTTP/HTTPs/Socks5代理</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
       </tr>
 
       <tr>
-        <td>{{quote_chinese(a)}}</td>
-        <td>将 a 中所有 ord() &gt;=128 的用 urlencode 表示（注意和 urlencode 有区别）</td>
-        <td>{{quote_chinese("123中文QAQ&amp;amp;/:")}}</td>
-        <td class="autowrap">123%E4%B8%AD%E6%96%87QAQ&amp;amp;/:</td>
+        <td>{{__log__}}</td>
+        <td>日志, 用于单个模板任务的日志记录和输出. <br>支持多行日志, 用'\r\n'分隔</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
       </tr>
 
       <tr>
-        <td>{{bool(a)}}</td>
-        <td>将 a 转为布尔值, <br>a为("yes", "on", "1", "true", 1)时为True, 不区分大小写</td>
+        <td>{{int(value, default=0, base=10)}}</td>
+        <td>将 value 转为整数, <br>base: 进制, 默认为10<br>default: 转换失败时的默认值, 默认为0</td>
+        <td>{{int("123", base=10)}}</td>
+        <td class="autowrap">123</td>
+      </tr>
+
+      <tr>
+        <td>{{float(value, default=0)}}</td>
+        <td>将 value 转为浮点数, <br>default: 转换失败时的默认值, 默认为0</td>
+        <td>{{float("123.456")}}</td>
+        <td class="autowrap">123.456</td>
+      </tr>
+
+      <tr>
+        <td>{{bool(value)}}</td>
+        <td>将 value 转为布尔值, <br>value 为("yes", "on", "1", "true", 1)时为True, 不区分大小写</td>
         <td>{{bool("Yes")}}</td>
         <td class="autowrap">True</td>
       </tr>
 
       <tr>
-        <td>{{random(min,max,unit)}}</td>
-        <td>随机生成从 min 到 max 的 unit 位小数</td>
-        <td>{{random(0,10,4)}}</td>
-        <td class="autowrap">0.8696</td>
+        <td>{{utf8(value)}}</td>
+        <td>当 value 为字符串时, 将其转为 utf-8 编码的字节流</td>
+        <td>{{utf8("你好")}}</td>
+        <td class="autowrap">b'\xe4\xbd\xa0\xe5\xa5\xbd'</td>
+      </tr>
+
+      <tr>
+        <td>{{unicode(value, html_unescape=False)}}</td>
+        <td>将字符串 value 由 Unicode 转为中文, <br>html_unescape: 是否对 value 进行 html 反转义, 默认为 False <br>注意: 当 value 不为字符串类型时, 先尝试对其进行 utf-8 解码, 解码失败则对其进行 str() 转换.<br>可用于转换字节流为字符串</td>
+        <td>{{unicode("\u4f60\u597d")}}</td>
+        <td class="autowrap">你好</td>
+      </tr>
+
+      <tr>
+        <td>{{quote_chinese(value, sep="", encoding="utf-8", decoding="utf-8")}}</td>
+        <td>将 value 中所有 ord()>=128 的字节用 urlencode 表示 (注意和 urlencode 有区别), <br>sep: 分隔符, 默认为"", if <br>encoding: 编码, 默认为 utf-8, <br>decoding: 解码, 默认为 utf-8</td>
+        <td>{{quote_chinese("123中文QAQ&amp;amp;/:")}}</td>
+        <td class="autowrap">123%E4%B8%AD%E6%96%87QAQ&amp;amp;/:</td>
+      </tr>
+
+      <tr>
+        <td>urlencode(value,encoding="utf-8", for_qs=False)</td>
+        <td>将 value 字符串进行url编码, <br>encoding: 编码, 默认为 utf-8, <br>for_qs: 是否将斜杠 / 编码为 %2F, 将 %20 替换为 +, 默认为 False</td>
+        <td>{{ urlencode("http://www.baidu.com?name=张三&age=18 ") }}</td>
+        <td class="autowrap">http%3A//www.baidu.com%3Fname%3D%E5%BC%A0%E4%B8%89%26age%3D18%20</td>
+      </tr>
+
+      <tr>
+        <td>b2a_hex(data[, sep[, bytes_per_sep=1]])</td>
+        <td>将字节流 data 转为十六进制表示, <br>sep: 分隔符, 默认为空<br>bytes_per_sep: 每隔多少个字节添加一个分隔符, 默认为1</td>
+        <td>{{unicode(b2a_hex(utf8('1234567890abcdef'), sep=' ', bytes_per_sep=2))}}</td>
+        <td class="autowrap">31 32 33 34 35 36 37 38 39 30 61 62 63 64 65 66</td>
+      </tr>
+
+      <tr>
+        <td>a2b_hex(hexstr)</td>
+        <td>将十六进制 ASCII 字符串表示的 hexstr 转为字节流</td>
+        <td>{{unicode(a2b_hex('31323334353637383930616263646566'))}}</td>
+        <td class="autowrap">1234567890abcdef</td>
+      </tr>
+
+      <tr>
+        <td>b2a_uu(data, *, backtick=False)</td>
+        <td>将字节流 data 转为 uu 编码, <br>backtick: 是否使用反引号表示 0, <br>默认为False, 即使用空格表示 0<br>注意: data 的长度最多为45, 返回值包含换行符</td>
+        <td>{{unicode(b2a_uu(utf8('1234567890abcdef'), backtick=True))}}</td>
+        <td class="autowrap">'0,3(S-#4V-S@Y,&%B8V1E9@``\n'</td>
+      </tr>
+
+      <tr>
+        <td>a2b_uu(data)</td>
+        <td>将单行 uu 编码的字符串 data 转为字节流</td>
+        <td>{{unicode(a2b_uu('0,3(S-#4V-S@Y,&%B8V1E9@``'))}}</td>
+        <td class="autowrap">1234567890abcdef</td>
+      </tr>
+
+      <tr>
+        <td>b2a_base64(data, *, newline=True)</td>
+        <td>将字节流 data 转为 base64 编码, <br>newline: 是否添加换行符, 默认为True</td>
+        <td>{{unicode(b2a_base64(utf8('1234567890abcdef'), newline=False))}}</td>
+        <td class="autowrap">MTIzNDU2Nzg5MGFiY2RlZg==</td>
+      </tr>
+
+      <tr>
+        <td>a2b_base64(data)</td>
+        <td>将 base64 编码的字符串 data 转为字节流</td>
+        <td>{{unicode(a2b_base64('MTIzNDU2Nzg5MGFiY2RlZg=='))}}</td>
+        <td class="autowrap">1234567890abcdef</td>
+      </tr>
+
+      <tr>
+        <td>b2a_qp(data, *, quotetabs=False, istext=True, header=False)</td>
+        <td>将字节流 data 转为带引号的可打印编码, <br>quotetabs: 是否对制表符和空格进行编码, 默认为False<br>istext: 是否不对换行符进行编码, 默认为True<br>header: 是否将空格编码为下划线, 默认为False</td>
+        <td>{{unicode(b2a_qp(utf8('1234567890abcdef \n123'), quotetabs=True, istext=False, header=True))}}</td>
+        <td class="autowrap">1234567890abcdef=20=0A123</td>
+      </tr>
+
+      <tr>
+        <td>a2b_qp(data, *, header=False)</td>
+        <td>将带引号的可打印编码 data 转为字节流, <br>header: 是否将下划线解码为空格, 默认为False</td>
+        <td>{{unicode(a2b_qp('1234567890abcdef=20=0A123', header=True))}}</td>
+        <td class="autowrap">1234567890abcdef \n123</td>
+      </tr>
+
+      <tr>
+        <td>crc_hqx(data, value)</td>
+        <td>计算字节流 data 的 CRC 校验值, <br>value: 初始 CRC</td>
+        <td>{{crc_hqx(utf8('1234567890abcdef'), 0)}}</td>
+        <td class="autowrap">62028</td>
+      </tr>
+
+      <tr>
+        <td>crc32(data[, value])</td>
+        <td>计算字节流 data 的 CRC 校验值, <br>value: 初始 CRC, 默认为0</td>
+        <td>{{crc32(utf8('1234567890abcdef'), 0)}}</td>
+        <td class="autowrap">1554196281</td>
+      </tr>
+
+      <tr>
+        <td>{{format(value, format_spec="")}}</td>
+        <td>格式化输出, <br>value: 要格式化的值, <br>format_spec: 格式化字符串, <br>默认为空, 详见: <a href="https://docs.python.org/zh-cn/3/library/string.html#format-specification-mini-language" target="_blank" rel="nofollow">format-specification-mini-language</a></td>
+        <td>{{format(123.456, "0.2f")}}</td>
+        <td class="autowrap">123.46</td>
+      </tr>
+
+      <tr>
+        <td>{{b64encode(value, encoding="utf-8")}}</td>
+        <td>计算 value 的 base64 编码值, <br>encoding: 编码, 默认为 utf-8</td>
+        <td>{{b64encode("hello")}}</td>
+        <td class="autowrap">aGVsbG8=</td>
+      </tr>
+
+      <tr>
+        <td>{{b64decode(value, encoding="utf-8")}}</td>
+        <td>计算 value 的 base64 解码值, <br>encoding: 编码, 默认为 utf-8</td>
+        <td>{{b64decode("aGVsbG8=")}}</td>
+        <td class="autowrap">hello</td>
+      </tr>
+
+      <tr>
+        <td>{{to_uuid(value, namespace='6ba7b811-9dad-11d1-80b4-00c04fd430c8')}}</td>
+        <td>计算 value 的 uuid5 生成值; <br>namespace: uuid所使用的命名空间, <br>默认为: 6ba7b811-9dad-11d1-80b4-00c04fd430c8</td>
+        <td>{{to_uuid("hello")}}</td>
+        <td class="autowrap">074171de-bc84-5ea4-b636-1135477620e1</td>
+      </tr>
+
+      <tr>
+        <td>{{md5(value)}}</td>
+        <td>计算 value 的 md5 值</td>
+        <td>{{md5("123")}}</td>
+        <td class="autowrap">202cb962ac59075b964b07152d234b70</td>
+      </tr>
+
+      <tr>
+        <td>{{sha1(value)}}</td>
+        <td>计算 value 的 sha1 值</td>
+        <td>{{sha1("123")}}</td>
+        <td class="autowrap">40bd001563085fc35165329ea1ff5c5ecbdbbeef</td>
+      </tr>
+
+      <tr>
+        <td>{{password_hash(password, hashtype, salt=salt, salt_size=salt_size, rounds=rounds, ident=ident)}}</td>
+        <td>计算 password 的 加密hash 值; <br>hashtype: Hash 类型 ("md5", "sha256", "sha512", "blowfish"), 默认为 sha512 <br>salt: password 盐值 <br>salt_size: password 盐值尺寸 <br>rounds: password hash迭代次数 <br>ident: blowfish 算法版本, 默认为 2b</td>
+        <td>{{password_hash("hello")}}</td>
+        <td class="autowrap">$6$rounds=656000$KSQu5IKoWLdHDYqJ$W.MQWC3LsuzRsQ35.07h48Mr3TMJ9Cjj0du.5mGEW2yOFkQlxi/ySwwG5Z4SKVewpWn8PFPZLUuTrAwcV0ke0.</td>
+      </tr>
+
+      <tr>
+        <td>{{hash(value,hashtype)}}</td>
+        <td>计算 value 的 hash 值; <br>hashtype: Hash 类型, 默认为 sha1</td>
+        <td>{{hash("123","sha256")}}</td>
+        <td class="autowrap">a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3</td>
+      </tr>
+
+      <tr>
+        <td>{{aes_encrypt(word, key, mode, iv, output_format='base64', padding=True, padding_style='pkcs7')}}</td>
+        <td>计算 word 的 AES 加密值; <br>word: 待加密文本 <br>key: 密钥, 长度应为16, 24或32 <br>mode: 加密模式, ("ECB","CBC","CFB","OFB","CTR","GCM") <br>iv: 初始化向量, 长度为16 <br>output_format: 输出格式, 默认为 base64 <br>padding: 是否使用填充, 默认为 True <br>padding_style: 填充方式, 默认为 pkcs7</td>
+        <td>{{aes_encrypt("hello", "1234567890123456", "ECB", "1234567890123456", "hex")}}</td>
+        <td class="autowrap">ebb7c703e675db3da397038b4c17823c</td>
+      </tr>
+
+      <tr>
+        <td>{{aes_decrypt(word, key, mode, iv, input_format='base64', padding=True, padding_style='pkcs7')}}</td>
+        <td>计算 word 的 AES 解密值; <br>word: 待解密文本 <br>key: 密钥, 长度应为16, 24或32 <br>mode: 加密模式, ("ECB","CBC","CFB","OFB","CTR","GCM") <br>iv: 初始化向量, 长度为16 <br>input_format: 输入格式, 默认为 base64 <br>padding: 是否使用填充, 默认为 True <br>padding_style: 填充方式, 默认为 pkcs7</td>
+        <td>{{aes_decrypt("ebb7c703e675db3da397038b4c17823c", "1234567890123456", "ECB", "1234567890123456", "hex")}}</td>
+        <td class="autowrap">hello</td>
       </tr>
 
       <tr>
@@ -326,10 +501,10 @@
         <td>{{date_time(0,1,10)}}（在 18:06 测试）</td>
         <td class="autowrap">04:06:21</td>
       </tr>
-      
+
       <tr>
-        <td>{{is_num(s)}}</td>
-        <td>判断s是否为数字 <br>不支持科学计数</td>
+        <td>{{is_num(value)}}</td>
+        <td>判断 value 是否为数字 <br>不支持科学计数</td>
         <td>{{is_num('0.5')}}</td>
         <td class="autowrap">True</td>
       </tr>
@@ -368,69 +543,6 @@
         <td>{{Faker(locale='zh_CN').name()}}</td>
         <td class="autowrap">苗桂芝</td>
       </tr>
-      
-      <tr>
-        <td>{{b64encode(a)}}</td>
-        <td>计算 a 的 base64 编码值</td>
-        <td>{{b64encode("hello")}}</td>
-        <td class="autowrap">aGVsbG8=</td>
-      </tr>
-
-      <tr>
-        <td>{{b64decode(a)}}</td>
-        <td>计算 a 的 base64 解码值</td>
-        <td>{{b64decode("aGVsbG8=")}}</td>
-        <td class="autowrap">hello</td>
-      </tr>
-
-      <tr>
-        <td>{{to_uuid(a, namespace)}}</td>
-        <td>计算 a 的 uuid5 生成值; <br>namespace: uuid所使用的命名空间, <br>默认为: 6ba7b811-9dad-11d1-80b4-00c04fd430c8</td>
-        <td>{{to_uuid("hello")}}</td>
-        <td class="autowrap">074171de-bc84-5ea4-b636-1135477620e1</td>
-      </tr>
-
-      <tr>
-        <td>{{md5(a)}}</td>
-        <td>计算 a 的 md5 值</td>
-        <td>{{md5("123")}}</td>
-        <td class="autowrap">202cb962ac59075b964b07152d234b70</td>
-      </tr>
-
-      <tr>
-        <td>{{sha1(a)}}</td>
-        <td>计算 a 的 sha1 值</td>
-        <td>{{sha1("123")}}</td>
-        <td class="autowrap">40bd001563085fc35165329ea1ff5c5ecbdbbeef</td>
-      </tr>
-
-      <tr>
-        <td>{{hash(a,hashtype)}}</td>
-        <td>计算 a 的 hash 值; <br>hashtype: Hash 类型, 默认为 sha1</td>
-        <td>{{hash("123","sha256")}}</td>
-        <td class="autowrap">a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3</td>
-      </tr>
-
-      <tr>
-        <td>{{aes_encrypt(word, key, mode, iv, output_format='base64', padding=True, padding_style='pkcs7')}}</td>
-        <td>计算 word 的 AES 加密值; <br>word: 待加密文本 <br>key: 密钥, 长度应为16, 24或32 <br>mode: 加密模式, ("ECB","CBC","CFB","OFB","CTR","GCM") <br>iv: 初始化向量, 长度为16 <br>output_format: 输出格式, 默认为 base64 <br>padding: 是否使用填充, 默认为 True <br>padding_style: 填充方式, 默认为 pkcs7</td>
-        <td>{{aes_encrypt("hello", "1234567890123456", "ECB", "1234567890123456", "hex")}}</td>
-        <td class="autowrap">ebb7c703e675db3da397038b4c17823c</td>
-      </tr>
-
-      <tr>
-        <td>{{aes_decrypt(word, key, mode, iv, input_format='base64', padding=True, padding_style='pkcs7')}}</td>
-        <td>计算 word 的 AES 解密值; <br>word: 待解密文本 <br>key: 密钥, 长度应为16, 24或32 <br>mode: 加密模式, ("ECB","CBC","CFB","OFB","CTR","GCM") <br>iv: 初始化向量, 长度为16 <br>input_format: 输入格式, 默认为 base64 <br>padding: 是否使用填充, 默认为 True <br>padding_style: 填充方式, 默认为 pkcs7</td>
-        <td>{{aes_decrypt("ebb7c703e675db3da397038b4c17823c", "1234567890123456", "ECB", "1234567890123456", "hex")}}</td>
-        <td class="autowrap">hello</td>
-      </tr>
-
-      <tr>
-        <td>{{password_hash(password, hashtype, salt=salt, salt_size=salt_size, rounds=rounds, ident=ident)}}</td>
-        <td>计算 password 的 加密hash 值; <br>hashtype: Hash 类型 ("md5", "sha256", "sha512", "blowfish"), 默认为 sha512 <br>salt: password 盐值 <br>salt_size: password 盐值尺寸 <br>rounds: password hash迭代次数 <br>ident: blowfish 算法版本, 默认为 2b</td>
-        <td>{{password_hash("hello")}}</td>
-        <td class="autowrap">$6$rounds=656000$KSQu5IKoWLdHDYqJ$W.MQWC3LsuzRsQ35.07h48Mr3TMJ9Cjj0du.5mGEW2yOFkQlxi/ySwwG5Z4SKVewpWn8PFPZLUuTrAwcV0ke0.</td>
-      </tr>
 
       <tr>
         <td>{{regex_replace(value, pattern, replacement, count, ignorecase, multiline)}}</td>
@@ -468,22 +580,133 @@
       </tr>
 
       <tr>
+        <td>{{random(min, max, unit)}}</td>
+        <td>随机生成从 min 到 max 的 unit 位小数</td>
+        <td>{{random(0,10,4)}}</td>
+        <td class="autowrap">0.8696</td>
+      </tr>
+
+      <tr>
+        <td>{{shuffle(mylist, seed=None)}}</td>
+        <td>随机打乱列表 mylist, seed 为随机种子</td>
+        <td>{{shuffle([1,2,3,4,5,6,7,8,9,10])}}</td>
+        <td class="autowrap">[2, 1, 3, 4, 5, 6, 7, 8, 9, 10]</td>
+      </tr>
+
+      <tr>
+        <td>{{type_debug(value)}}</td>
+        <td>返回 value 的类型名, 用于调试</td>
+        <td>{{type_debug(unicode(""))}}</td>
+        <td class="autowrap">str</td>
+      </tr>
+
+      <tr>
         <td>{% for variable in variables %}</td>
         <td>开始一个 for 循环</td>
         <td>\</td>
         <td class="autowrap">\</td>
       </tr>
-      
+
       <tr>
         <td>{% endfor %}</td>
-        <td>结束一个 for 循环</td>
+        <td>结束 for 循环</td>
         <td>\</td>
         <td class="autowrap">\</td>
       </tr>
-      
+
+      <tr>
+        <td>{% for value in range(start, stop, step) %}</td>
+        <td>开始一个基于 range 的 for 循环, <br>range() 为 Python 函数<br>start: 开始值, 默认为 0 <br>stop: 结束值, 默认为 0 <br>step: 步长, 默认为 1<br>value: 循环中的值, 可不预先定义</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{% for value in list(variable) %}</td>
+        <td>开始一个基于 list 的 for 循环, <br>list() 为 Python 函数<br>variable: 要转换为列表的变量<br>value: 列表中的元素, 可不预先定义</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{% while int(loop_index0) < While_Limit and Conditional_Expression %}</td>
+        <td>开始一个 while 循环, <br>循环超时默认为 30 分钟<br>While_Limit: 循环最大次数<br>Conditional_Expression: 条件表达式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{% endwhile %}</td>
+        <td>结束 while 循环</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+
+      <tr>
+        <td>{{ loop_length }}</td>
+        <td>当前 for 循环的长度, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_index }}</td>
+        <td>当前 for/while 循环的索引, 从 1 开始计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_index0 }}</td>
+        <td>当前 for/while 循环的索引, 从 0 开始计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_revindex }}</td>
+        <td>当前 for 循环的索引, 从 1 开始倒序计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_revindex0 }}</td>
+        <td>当前 for 循环的索引, 从 0 开始倒序计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_first }}</td>
+        <td>是否为当前 for 循环的开始, <br>结果为 True 或 False 的字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_last }}</td>
+        <td>是否为当前 for 循环的结束, <br>结果为 True 或 False 的字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_depth }}</td>
+        <td>当前 for/while 循环的嵌套深度, 从 1 开始计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
+      <tr>
+        <td>{{ loop_depth0 }}</td>
+        <td>当前 for/while 循环的嵌套深度, 从 0 开始计数, <br>结果为字符串形式</td>
+        <td>\</td>
+        <td class="autowrap">\</td>
+      </tr>
+
       <tr>
         <td>{% if Conditional_Expression %}</td>
-        <td>开始一个 if 判断</td>
+        <td>开始一个 if 判断<br>Conditional_Expression: 条件表达式</td>
         <td>\</td>
         <td class="autowrap">\</td>
       </tr>
@@ -494,56 +717,189 @@
         <td>\</td>
         <td class="autowrap">\</td>
       </tr>
-      
+
       <tr>
         <td>{% endif %}</td>
-        <td>结束一个 if 判断</td>
+        <td>结束 if 判断</td>
         <td>\</td>
         <td class="autowrap">\</td>
       </tr>
-      
+
       <tr>
         <td>safe</td>
         <td>关闭 html 自动转义</td>
         <td>{{ "&lt;em&gt;name&lt;/em&gt;" | safe }}</td>
         <td class="autowrap">&lt;em&gt;name&lt;/em&gt;</td>
       </tr>
-      
+
       <tr>
         <td>length</td>
         <td>长度</td>
         <td>{{ "abc" | length }}</td>
         <td class="autowrap">3</td>
       </tr>
-      
+
       <tr>
         <td>wordcount</td>
         <td>计算字符串中单词的个数</td>
         <td>{{ "abc def" | wordcount }}</td>
         <td class="autowrap">2</td>
       </tr>
-      
+
       <tr>
         <td>striptags</td>
         <td>删除字符串中所有的html标签, 如果出现多个空格, 将替换成一个空格</td>
         <td>{{ "&lt;a&gt;123&lt;/a&gt;    &lt;p&gt;456&lt;/p&gt;" | striptags }}</td>
         <td class="autowrap">123 456</td>
       </tr>
-      
+
       <tr>
-        <td>replace(s,t)</td>
-        <td>将字符串中的 s 替换为 t</td>
+        <td>upper</td>
+        <td>将字符串转为大写</td>
+        <td>{{ "abc" | upper }}</td>
+        <td class="autowrap">ABC</td>
+      </tr>
+
+      <tr>
+        <td>lower</td>
+        <td>将字符串转为小写</td>
+        <td>{{ "ABC" | lower }}</td>
+        <td class="autowrap">abc</td>
+      </tr>
+
+      <tr>
+        <td>capitalize</td>
+        <td>将字符串首字母大写</td>
+        <td>{{ "abc" | capitalize }}</td>
+        <td class="autowrap">Abc</td>
+      </tr>
+
+      <tr>
+        <td>title</td>
+        <td>将字符串中每个单词的首字母大写</td>
+        <td>{{ "abc def" | title }}</td>
+        <td class="autowrap">Abc Def</td>
+      </tr>
+
+      <tr>
+        <td>trim</td>
+        <td>删除字符串两端的空白字符</td>
+        <td>{{ "  abc  " | trim }}</td>
+        <td class="autowrap">abc</td>
+      </tr>
+
+      <tr>
+        <td>ltrim</td>
+        <td>删除字符串左端的空白字符</td>
+        <td>{{ "  abc  " | ltrim }}</td>
+        <td class="autowrap">abc  </td>
+      </tr>
+
+      <tr>
+        <td>rtrim</td>
+        <td>删除字符串右端的空白字符</td>
+        <td>{{ "  abc  " | rtrim }}</td>
+        <td class="autowrap">  abc</td>
+      </tr>
+
+      <tr>
+        <td>reverse</td>
+        <td>反转字符串等可迭代对象</td>
+        <td>{{ "abc" | reverse }}</td>
+        <td class="autowrap">cba</td>
+      </tr>
+
+      <tr>
+        <td>first</td>
+        <td>返回字符串等可迭代对象的第一个元素</td>
+        <td>{{ "abc" | first }}</td>
+        <td class="autowrap">a</td>
+      </tr>
+
+      <tr>
+        <td>last</td>
+        <td>返回字符串等可迭代对象的最后一个元素</td>
+        <td>{{ "abc" | last }}</td>
+        <td class="autowrap">c</td>
+      </tr>
+
+      <tr>
+        <td>join(d="", attribute=None)</td>
+        <td>将列表等可迭代对象的元素用指定字符连接, <br>d: 连接符, 默认为空 <br>attribute: 指定属性, 该值不为 None 时获取该属性的值, 默认为 None</td>
+        <td>{{ ["a","b","c"] | join(",") }}</td>
+        <td class="autowrap">a,b,c</td>
+      </tr>
+
+      <tr>
+        <td>pprint</td>
+        <td>优雅地打印变量或对象, 用于调试</td>
+        <td>{{ {"a":1,"b":2} | pprint }}</td>
+        <td class="autowrap">{'a': 1, 'b': 2}</td>
+      </tr>
+
+      <tr>
+        <td>default(default_value, boolean)</td>
+        <td>如果变量或字符串为空, 则将变量或返回值设置为 default_value 默认值, <br>boolean: 是否在变量或字符串评估为 False 时将变量或返回值设置为 default_value 默认值, 默认为 False</td>
+        <td>{{ undefined | default("abc") }}</td>
+        <td class="autowrap">abc</td>
+      </tr>
+
+      <tr>
+        <td>indent(width=4, first=False, blank=False)</td>
+        <td>缩进字符串, <br>width: 缩进宽度, 默认为 4 <br>first: 是否缩进第一行, 默认为 False <br>blank: 是否缩进空行, 默认为 False</td>
+        <td>{{ "abc\ndef\nghi\n" | indent(2, True, True) }}</td>
+        <td class="autowrap">"  abc\n  def\n  ghi\n  "</td>
+      </tr>
+
+      <tr>
+        <td>min(case_sensitive=False, attribute=None)</td>
+        <td>返回字符串或列表等可迭代对象中的最小值, <br>case_sensitive: 是否区分大小写, 默认为 False <br>attribute: 指定属性, 该值不为 None 时获取具有该属性最小值的对象, 默认为 None</td>
+        <td>{{ ["a","b","c"] | min }}</td>
+        <td class="autowrap">a</td>
+      </tr>
+
+      <tr>
+        <td>max(case_sensitive=False, attribute=None)</td>
+        <td>返回字符串或列表等可迭代对象中的最大值, <br>case_sensitive: 是否区分大小写, 默认为 False <br>attribute: 指定属性, 该值不为 None 时获取具有该属性最大值的对象, 默认为 None</td>
+        <td>{{ ["a","b","c"] | max }}</td>
+        <td class="autowrap">c</td>
+      </tr>
+
+      <tr>
+        <td>replace(old, new, count=None)</td>
+        <td>将字符串中的 old 替换为 new, <br>count: 替换次数, 默认为全部替换</td>
         <td>{{ "123" | replace("1","a") }}</td>
         <td class="autowrap">a23</td>
       </tr>
-      
+
+      <tr>
+        <td>round(precision=0, method="common")</td>
+        <td>对数字进行四舍五入, <br>precision: 精度, 默认为 0 <br>method: 舍入方法, common 为四舍五入, ceil 为向上取整, floor 为向下取整, 默认为 common</td>
+        <td>{{ 1.234 | round(2, "common") }}</td>
+        <td class="autowrap">1.23</td>
+      </tr>
+
+      <tr>
+        <td>sort(reverse=False, case_sensitive=False, attribute=None)</td>
+        <td>对字符串或列表等可迭代对象进行排序, <br>reverse: 是否倒序, 默认为 False <br>case_sensitive: 是否区分大小写, 默认为 False <br>attribute: 指定属性, 该值不为 None 时获取具有该属性最大值的对象, 默认为 None</td>
+        <td>{{ "acDcsrd" | sort | join(",") }}</td>
+        <td class="autowrap">a,c,c,D,d,r,s</td>
+      </tr>
+
       <tr>
         <td>truncate(length=255, killwords=False, end='...')</td>
         <td>killwords=True 时在第 length 处截断，最后补上一个 end</td>
         <td>{{ "abcd" | truncate(2, True,'q') }}</td>
         <td class="autowrap">aq</td>
       </tr>
-      
+
+      <tr>
+        <td>wordwrap(width=79, break_long_words=True, wrapstring=None, break_on_hyphens=False)</td>
+        <td>将字符串按照指定宽度进行换行, <br>width: 换行宽度, 默认为 79 <br>break_long_words: 是否在长单词处换行, 默认为 True <br>wrapstring: 换行符, 默认为 None, 表示使用 "\n" 换行, <br>break_on_hyphens: 是否在连字符处换行, 默认为 False</td>
+        <td>{{ "12345678-90 abcdefgh" | wordwrap(5, True, " ", True) }}</td>
+        <td class="autowrap">12345 678- 90 ab cdefg h</td>
+      </tr>
+
     </tbody>
   </table>
 </div>

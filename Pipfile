@@ -1,22 +1,29 @@
 [[source]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+verify_ssl = true
+name = "tencent"
+
+[[source]]
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
+
+[pipenv]
+install_search_all_sources = true
 
 [packages]
 tornado = "*"
 charset-normalizer = "*"
-requests = "*"
+requests = {version = "*", index = "pypi"}
 pbkdf2 = "*"
-pycryptodome = "*"
-pytz = "*"
-croniter = "*"
+pycryptodome = {version = "*", index = "pypi"}
+croniter = {version = "*", index = "pypi"}
 Jinja2 = "*"
 redis = "*"
 incremental = "*"
-u-msgpack-python = "*"
+u-msgpack-python = {version = "*", index = "pypi"}
 pysocks = "*"
-faker = "*"
+faker = {version = "*", index = "pypi"}
 colorama = {version = "*", markers="sys_platform == 'win32'"}
 aiofiles = "*"
 passlib = "*"
@@ -25,11 +32,11 @@ aiosqlite = "*"
 cryptography = "*"
 aiohttp = "*"
 sqlalchemy = {version = "<2.0", extras = ["asyncio"]}
+tzdata = "*"
 
 [dev-packages]
-opencv-python-headless = "*"
-ddddocr = "*"
-pycurl = {version = "*", markers="sys_platform != 'win32'"}
+#ddddocr = "*"
+#pycurl = {version = "*", markers="sys_platform != 'win32'"}
 
 [requires]
 python_version = "3.11"

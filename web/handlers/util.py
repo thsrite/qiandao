@@ -1,25 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import base64
 import datetime
+import html
 import json
 import os
 import re
 import time
 import traceback
 import urllib
-
-import pytz
-
-from libs.log import Log
-
-logger_Web_Util = Log('QD.Web.Util').getlogger()
-try:
-    import ddddocr
-except ImportError as e:
-    logger_Web_Util.warning('Import DdddOCR module falied: \"%s\". \nTips: This warning message is only for prompting, it will not affect running of QD framework.', e)
-    ddddocr = None
-import base64
+from zoneinfo import ZoneInfo
 
 import aiohttp
 from Crypto import Random
@@ -28,9 +19,17 @@ from Crypto.PublicKey import RSA
 from tornado import gen
 
 from config import delay_max_timeout, strtobool
+from libs.log import Log
 
 from .base import *
 
+logger_Web_Util = Log('QD.Web.Util').getlogger()
+try:
+    import ddddocr
+except ImportError as e:
+    if config.display_import_warning:
+        logger_Web_Util.warning('Import DdddOCR module falied: \"%s\". \nTips: This warning message is only for prompting, it will not affect running of QD framework.', e)
+    ddddocr = None
 
 def request_parse(req_data):
     '''解析请求数据并以json形式返回'''
@@ -120,38 +119,46 @@ class TimeStampHandler(BaseHandler):
         Rtv = {}
         try:
             ts = self.get_argument("ts", "")
-            type = self.get_argument("form", "%Y-%m-%d %H:%M:%S")
-            cst_tz = pytz.timezone('Asia/Shanghai')
-            utc_tz = pytz.timezone("UTC")
+            dt = self.get_argument("dt", "")
+            time_format = self.get_argument("form", "%Y-%m-%d %H:%M:%S")
+            if not time_format:
+                time_format = "%Y-%m-%d %H:%M:%S"
+            cst_tz = ZoneInfo('Asia/Shanghai')
+            utc_tz = ZoneInfo("UTC")
             GMT_FORMAT = "%a, %d %b %Y %H:%M:%S GMT"
             tmp = datetime.datetime.fromtimestamp
 
-            if not ts:
-                # 当前本机时间戳, 本机时间和北京时间
-                Rtv[u"完整时间戳"] = time.time()
+            if dt:
+                ts = datetime.datetime.strptime(dt, time_format).timestamp()
+
+            if ts:
+                # 用户时间戳转北京时间
+                Rtv[u"完整时间戳"] = float(ts)
                 Rtv[u"时间戳"] = int(Rtv[u"完整时间戳"])
                 Rtv[u"16位时间戳"] = int(Rtv[u"完整时间戳"] * 1000000)
-                Rtv[u"本机时间"] = tmp(Rtv[u"完整时间戳"]).strftime(type)
                 Rtv[u"周"] = tmp(Rtv[u"完整时间戳"]).strftime("%w/%W")
                 Rtv[u"日"] = "/".join([
                     tmp(Rtv[u"完整时间戳"]).strftime("%j"),
                     yearday(tmp(Rtv[u"完整时间戳"]).year)
                 ])
-                Rtv[u"北京时间"] = tmp(Rtv[u"完整时间戳"], cst_tz).strftime(type)
+                Rtv[u"北京时间"] = tmp(Rtv[u"完整时间戳"], cst_tz).strftime(time_format)
                 Rtv[u"GMT格式"] = tmp(Rtv[u"完整时间戳"], utc_tz).strftime(GMT_FORMAT)
                 Rtv[u"ISO格式"] = tmp(Rtv[u"完整时间戳"],
                                     utc_tz).isoformat().split("+")[0] + "Z"
             else:
-                # 用户时间戳转北京时间
-                Rtv[u"时间戳"] = int(ts)
-                Rtv[u"周"] = tmp(Rtv[u"时间戳"]).strftime("%w/%W")
+                # 当前本机时间戳, 本机时间和北京时间
+                Rtv[u"完整时间戳"] = time.time()
+                Rtv[u"时间戳"] = int(Rtv[u"完整时间戳"])
+                Rtv[u"16位时间戳"] = int(Rtv[u"完整时间戳"] * 1000000)
+                Rtv[u"本机时间"] = tmp(Rtv[u"完整时间戳"]).strftime(time_format)
+                Rtv[u"周"] = tmp(Rtv[u"完整时间戳"]).strftime("%w/%W")
                 Rtv[u"日"] = "/".join([
-                    tmp(Rtv[u"时间戳"]).strftime("%j"),
-                    yearday(tmp(Rtv[u"时间戳"]).year)
+                    tmp(Rtv[u"完整时间戳"]).strftime("%j"),
+                    yearday(tmp(Rtv[u"完整时间戳"]).year)
                 ])
-                Rtv[u"北京时间"] = tmp(Rtv[u"时间戳"], cst_tz).strftime(type)
-                Rtv[u"GMT格式"] = tmp(Rtv[u"时间戳"], utc_tz).strftime(GMT_FORMAT)
-                Rtv[u"ISO格式"] = tmp(Rtv[u"时间戳"],
+                Rtv[u"北京时间"] = tmp(Rtv[u"完整时间戳"], cst_tz).strftime(time_format)
+                Rtv[u"GMT格式"] = tmp(Rtv[u"完整时间戳"], utc_tz).strftime(GMT_FORMAT)
+                Rtv[u"ISO格式"] = tmp(Rtv[u"完整时间戳"],
                                     utc_tz).isoformat().split("+")[0] + "Z"
             Rtv[u"状态"] = "200"
         except Exception as e:
@@ -159,6 +166,9 @@ class TimeStampHandler(BaseHandler):
 
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.write(json.dumps(Rtv, ensure_ascii=False, indent=4))
+
+    async def post(self):
+        await self.get()
 
 
 def yearday(year):
@@ -174,11 +184,15 @@ class UniCodeHandler(BaseHandler):
         Rtv = {}
         try:
             content = self.get_argument("content", "")
+            html_unescape = self.get_argument("html_unescape", "false")
             tmp = bytes(content, 'unicode_escape').decode('utf-8').replace(
                 r'\u', r'\\u').replace(r'\\\u', r'\\u')
             tmp = bytes(tmp, 'utf-8').decode('unicode_escape')
-            Rtv[u"转换后"] = tmp.encode('utf-8').replace(
+            tmp = tmp.encode('utf-8').replace(
                 b'\xc2\xa0', b'\xa0').decode('unicode_escape')
+            if strtobool(html_unescape):
+                tmp = html.unescape(tmp)
+            Rtv[u"转换后"] = tmp
             Rtv[u"状态"] = "200"
         except Exception as e:
             Rtv[u"状态"] = str(e)
@@ -191,11 +205,15 @@ class UniCodeHandler(BaseHandler):
         Rtv = {}
         try:
             content = self.get_argument("content", "")
+            html_unescape = self.get_argument("html_unescape", "false")
             tmp = bytes(content, 'unicode_escape').decode('utf-8').replace(
                 r'\u', r'\\u').replace(r'\\\u', r'\\u')
             tmp = bytes(tmp, 'utf-8').decode('unicode_escape')
-            Rtv[u"转换后"] = tmp.encode('utf-8').replace(
+            tmp = tmp.encode('utf-8').replace(
                 b'\xc2\xa0', b'\xa0').decode('unicode_escape')
+            if strtobool(html_unescape):
+                tmp = html.unescape(tmp)
+            Rtv[u"转换后"] = tmp
             Rtv[u"状态"] = "200"
         except Exception as e:
             Rtv[u"状态"] = str(e)
@@ -242,7 +260,12 @@ class UrlDecodeHandler(BaseHandler):
         Rtv = {}
         try:
             content = self.get_argument("content", "")
-            Rtv[u"转换后"] = urllib.parse.unquote(content)
+            encoding = self.get_argument("encoding", "utf-8")
+            unquote_plus = self.get_argument("unquote_plus", "false")
+            if strtobool(unquote_plus):
+                Rtv[u"转换后"] = urllib.parse.unquote_plus(content, encoding=encoding)
+            else:
+                Rtv[u"转换后"] = urllib.parse.unquote(content, encoding=encoding)
             Rtv[u"状态"] = "200"
         except Exception as e:
             Rtv[u"状态"] = str(e)
@@ -255,7 +278,12 @@ class UrlDecodeHandler(BaseHandler):
         Rtv = {}
         try:
             content = self.get_argument("content", "")
-            Rtv[u"转换后"] = urllib.parse.unquote(content)
+            encoding = self.get_argument("encoding", "utf-8")
+            unquote_plus = self.get_argument("unquote_plus", "false")
+            if strtobool(unquote_plus):
+                Rtv[u"转换后"] = urllib.parse.unquote_plus(content, encoding=encoding)
+            else:
+                Rtv[u"转换后"] = urllib.parse.unquote(content, encoding=encoding)
             Rtv[u"状态"] = "200"
         except Exception as e:
             Rtv[u"状态"] = str(e)
@@ -712,29 +740,30 @@ class toolbox_notepad_list_Handler(BaseHandler):
 class DdddOCRServer(object):
 
     def __init__(self):
-        self.oldocr = ddddocr.DdddOcr(old=True, show_ad=False)
-        self.ocr = ddddocr.DdddOcr(show_ad=False)
-        self.det = ddddocr.DdddOcr(det=True, show_ad=False)
-        self.slide = ddddocr.DdddOcr(det=False, ocr=False, show_ad=False)
-        self.extra = {}
-        if len(config.extra_onnx_name) == len(
-                config.extra_charsets_name
-        ) and config.extra_onnx_name[0] and config.extra_charsets_name[0]:
-            for i in range(len(config.extra_onnx_name)):
-                self.extra[config.extra_onnx_name[i]] = ddddocr.DdddOcr(
-                    show_ad=False,
-                    import_onnx_path=os.path.join(
-                        os.path.abspath(
-                            os.path.dirname(
-                                os.path.dirname(os.path.dirname(__file__)))),
-                        "config", f"{config.extra_onnx_name[i]}.onnx"),
-                    charsets_path=os.path.join(
-                        os.path.abspath(
-                            os.path.dirname(
-                                os.path.dirname(os.path.dirname(__file__)))),
-                        "config", f"{config.extra_charsets_name[i]}.json"))
-                logger_Web_Util.info(
-                    f"成功加载自定义Onnx模型: {config.extra_onnx_name[i]}.onnx")
+        if ddddocr is not None and hasattr(ddddocr,"DdddOcr"):
+            self.oldocr = ddddocr.DdddOcr(old=True, show_ad=False)
+            self.ocr = ddddocr.DdddOcr(show_ad=False)
+            self.det = ddddocr.DdddOcr(det=True, show_ad=False)
+            self.slide = ddddocr.DdddOcr(det=False, ocr=False, show_ad=False)
+            self.extra = {}
+            if len(config.extra_onnx_name) == len(
+                    config.extra_charsets_name
+            ) and config.extra_onnx_name[0] and config.extra_charsets_name[0]:
+                for i in range(len(config.extra_onnx_name)):
+                    self.extra[config.extra_onnx_name[i]] = ddddocr.DdddOcr(
+                        show_ad=False,
+                        import_onnx_path=os.path.join(
+                            os.path.abspath(
+                                os.path.dirname(
+                                    os.path.dirname(os.path.dirname(__file__)))),
+                            "config", f"{config.extra_onnx_name[i]}.onnx"),
+                        charsets_path=os.path.join(
+                            os.path.abspath(
+                                os.path.dirname(
+                                    os.path.dirname(os.path.dirname(__file__)))),
+                            "config", f"{config.extra_charsets_name[i]}.json"))
+                    logger_Web_Util.info(
+                        f"成功加载自定义Onnx模型: {config.extra_onnx_name[i]}.onnx")
 
     def classification(self, img: bytes, old=False, extra_onnx_name=""):
         if extra_onnx_name:

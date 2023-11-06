@@ -48,6 +48,20 @@
       },
       url_parse: node_url.parse,
       url_unparse: node_url.format,
+      path_unparse_with_variables: function(path) {
+        var _path, key, m, re, replace_list, value;
+        _path = decodeURIComponent(path);
+        replace_list = {};
+        re = /{{\s*([\w]+)[^}]*?\s*}}/g;
+        while (m = re.exec(_path)) {
+          replace_list[fix_encodeURIComponent(m[0])] = m[0];
+        }
+        for (key in replace_list) {
+          value = replace_list[key];
+          path = path.replace(new RegExp(RegExp.escape(key), 'g'), value);
+        }
+        return path;
+      },
       querystring_parse: node_querystring.parse,
       querystring_unparse: node_querystring.stringify,
       querystring_unparse_with_variables: function(obj) {
@@ -130,29 +144,29 @@
         return exports.get_public_suffix(exports.url_parse(url).hostname);
       },
       debounce: function(func, wait, immediate) {
-        var later, timeout, timestamp;
+        var timeout, timestamp;
         timestamp = 0;
         timeout = 0;
-        later = function() {
-          var args, context, last, result;
-          last = (new Date().getTime()) - timestamp;
-          if ((0 < last && last < wait)) {
-            return timeout = setTimeout(later, wait - last);
-          } else {
-            timeout = null;
-            if (!immediate) {
-              result = func.apply(context, args);
-              if (!timeout) {
-                return context = args = null;
-              }
-            }
-          }
-        };
         return function() {
-          var args, callNow, context, result;
+          var args, callNow, context, later, result;
           context = this;
           args = arguments;
           timestamp = new Date().getTime();
+          later = function() {
+            var last, result;
+            last = (new Date().getTime()) - timestamp;
+            if ((0 < last && last < wait)) {
+              return timeout = setTimeout(later, wait - last);
+            } else {
+              timeout = null;
+              if (!immediate) {
+                result = func.apply(context, args);
+                if (!timeout) {
+                  return context = args = null;
+                }
+              }
+            }
+          };
           callNow = immediate && !timeout;
           if (!timeout) {
             timeout = setTimeout(later, wait);
